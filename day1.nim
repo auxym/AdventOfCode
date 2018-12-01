@@ -1,16 +1,13 @@
 import strutils
 import sequtils
 import sets
-import math
 
 let input = readFile("./day1_input.txt")
-    .splitLines()
-    .filter(proc(x: string): bool = x.len > 0) # parseInt fails on empty last line
-    .map(parseInt)
+    .strip.splitLines.map(parseInt)
 
 var 
     sum: int = 0
-    seen = initSet[int](2^17)
+    seen = initSet[int](1 shl 17)
     found_repeat = false
     first = true
 
