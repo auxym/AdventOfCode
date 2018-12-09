@@ -1,7 +1,7 @@
 import strUtils
 import seqUtils
 import tables
-import regex
+import strscans
 import hashes
 import algorithm
 import sets
@@ -23,36 +23,25 @@ func `==`(a, b: Node): bool = a.label == b.label
 func cmp(a, b: Node): int = cmp(a.label, b.label)
 func `$`(n: Node): string = result.add n.label
 
-func createNode(label: char): Node =
-    new(result)
+proc getOrCreateNode(g: var Graph, label: char): Node = 
+    if g.contains(label): return g[label]
+
+    result = new(Node)
     result.label = label
     result.dependencies = initSet[Node](16)
+    g[label] = result
 
 proc parseInput(): Graph =
     result = initTable[char, Node](32)
-    let pattern = re"Step ([A-Z]) must be finished before step ([A-Z]) can begin."
-    var m: RegexMatch
+    var childLabel, parentLabel: string
+    const pat = "Step $w must be finished before step $w can begin."
 
     for line in readFile("day7_input.txt").strip.splitLines:
-        if not find(line, pattern, m):
+        if not scanf(line, pat, parentLabel, childLabel):
             raise newException(ValueError, line)
         let
-            parentLabel: char = line[m.group(0)[0]][0]
-            childLabel: char = line[m.group(1)[0]][0]
-
-        var parent, child: Node
-        if result.contains(parentLabel):
-            parent = result[parentLabel]
-        else:
-            parent = createNode(parentLabel)
-            result[parentLabel] = parent
-
-        if result.contains(childLabel):
-            child = result[childLabel]
-        else:
-            child = createNode(childLabel)
-            result[childLabel] = child
-
+            parent = result.getOrCreateNode parentLabel[0]
+            child = result.getOrCreateNode childLabel[0]
         child.dependencies.incl parent
 
 func children(g: Graph, n: Node): seq[Node] =
