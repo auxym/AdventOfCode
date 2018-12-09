@@ -25,7 +25,6 @@ func `$`(n: Node): string = result.add n.label
 
 proc getOrCreateNode(g: var Graph, label: char): Node = 
     if g.contains(label): return g[label]
-
     result = new(Node)
     result.label = label
     result.dependencies = initSet[Node](16)
@@ -45,9 +44,7 @@ proc parseInput(): Graph =
         child.dependencies.incl parent
 
 func children(g: Graph, n: Node): seq[Node] =
-    for o in g.values:
-        if o.dependencies.contains(n):
-            result.add o
+    toSeq(g.values()).filter do (v: Node) -> bool: v.dependencies.contains(n)
 
 func hasNoDeps(n: Node): bool = n.dependencies.len == 0
 
