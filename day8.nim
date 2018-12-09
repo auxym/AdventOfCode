@@ -12,7 +12,7 @@ func readNode(stream: seq[int], pos: int) : (Node, int) =
     let
         numChildren = stream[pos]
         numMeta = stream[pos+1]
-    
+
     let n = new(Node)
     var newPos =  pos + 1
 
