@@ -1,4 +1,4 @@
-import strutils, algorithm, options
+import strutils, algorithm, options, sequtils
 
 type
     Grid = array[150, array[150, char]]
@@ -8,7 +8,8 @@ type
         x, y: int
         facing: Direction
         nextTurn: IntersectionOption
-    Point = tuple[x, y: int]
+        isDead: bool
+    Collision = tuple[a, b: Cart]
 
 func newCart(x, y: int, facing: Direction): Cart =
     result = new Cart
@@ -16,13 +17,14 @@ func newCart(x, y: int, facing: Direction): Cart =
     result.y = y
     result.facing = facing
     result.nextTurn = left
+    result.isDead = false
 
 var
     g: Grid
     carts: seq[Cart]
     x, y: int
 
-for line in readFile("./day13_input.txt").strip().splitLines():
+for line in readFile("./day13_input.txt").splitLines():
     x = 0
     for c in line:
         case c:
@@ -51,6 +53,9 @@ func cmp(a,b: Cart): int =
     result = cmp(a.y, b.y)
     if result == 0:
         result = cmp(a.x, b.x)
+
+func filterDead(carts: seq[Cart]): seq[Cart] =
+    carts.filterIt(not it.isDead)
 
 proc tickCart(cart: var Cart, tile: char) =
     case tile:
@@ -102,12 +107,15 @@ proc tickCart(cart: var Cart, tile: char) =
         of west:
             cart.x -= 1
 
-func checkCollision(carts: seq[Cart]): Option[Point] =
-    result = none(Point)
-    for i, cart1 in carts[carts.low..<carts.high]:
-        for cart2 in carts[i+1..carts.high]:
+func checkCollision(carts: seq[Cart]): Option[Collision] =
+    result = none(Collision)
+    let activeCarts = carts.filterDead()
+    for i, cart1 in activeCarts[activeCarts.low..<activeCarts.high]:
+        for cart2 in activeCarts[i+1..activeCarts.high]:
             if cart1.x == cart2.x and cart1.y == cart2.y:
-                return (cart1.x, cart1.y).some
+                cart1.isDead = true
+                cart2.isDead = true
+                return (cart1, cart2).some
 
 proc showCarts(g: Grid, carts: seq[Cart]) =
     var lines = newSeqOfCap[string](g.len)
@@ -117,7 +125,7 @@ proc showCarts(g: Grid, carts: seq[Cart]) =
             line = line & g[x][y]
         lines.add(line)
     
-    for c in carts:
+    for c in carts.filterDead():
         var cartChr: char
         case c.facing:
             of north:
@@ -133,19 +141,24 @@ proc showCarts(g: Grid, carts: seq[Cart]) =
     for line in lines:
         echo line
 
+while carts.filterDead().len > 1:
+    #showCarts(g, carts)
+    carts.sort(cmp)
+    for i in carts.low..carts.high:
+        var cart = carts[i]
+        let tile = g[cart.x][cart.y]
 
-block outer:
-    while true:
-        showCarts(g, carts)
-        carts.sort(cmp)
-        for i in carts.low..carts.high:
-            var cart = carts[i]
-            let tile = g[cart.x][cart.y]
-            cart.tickCart(tile)
-            
-            let collision = checkCollision(carts)
-            try:
-                echo "Collision ", collision.get()
-                break outer
-            except UnpackError:
-                discard
+        if cart.isDead:
+            continue
+
+        cart.tickCart(tile)
+        let collision = checkCollision(carts)
+        try:
+            let colliders = collision.get()
+            echo "Collision ", colliders.a.x, ",", colliders.a.y 
+            echo carts.filterDead().len
+        except UnpackError:
+            discard
+
+let lastCart = carts.filterDead()[0]
+echo "Last cart: ", lastCart.x, ",", lastCart.y
