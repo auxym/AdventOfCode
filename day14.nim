@@ -1,5 +1,4 @@
 import strutils, strformat
-import nimprof
 
 const INPUT = 880751
 
@@ -28,16 +27,24 @@ proc show(r: seq[int8], e1, e2: int) =
             line.add fmt"  {r[i]:d} "
     echo line
 
+func toDigits(i: int): seq[int8] =
+    var j = i
+    while j != 0:
+        result.insert cast[int8](j mod 10)
+        j = j div 10
+
 var 
     part1: string
     part2: int
-let
-    input_str = $INPUT
+let input_digits = toDigits INPUT
 while part1 == "" or part2 == 0:
     for r in combine(recipes[elf1], recipes[elf2]):
         recipes.add r
-        if recipes[recipes.len-input_str.len .. recipes.high].join("") == input_str:
-            part2 = recipes.len - input_str.len
+
+        # part 2
+        let mostRecent = recipes[recipes.len-input_digits.len .. recipes.high]
+        if mostRecent == input_digits:
+            part2 = recipes.len - input_digits.len
             echo part2
     
     elf1 = (elf1 + 1 + recipes[elf1]) mod recipes.len
