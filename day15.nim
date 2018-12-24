@@ -3,6 +3,7 @@ import strutils
 import deques
 import algorithm
 import sets
+import tables
 
 type
     Point = tuple[x, y: int]
@@ -111,23 +112,33 @@ func cmpDest(a, b: Path): int =
 func cmpFirstMove(a, b: Path): int =
     return cmpReading(a[1], b[1])
 
-func bfs(s: State, source: Point, dests: HashSet[Point]): seq[Path] =
-    var q = initDeque[Path]()
-    var visited = initSet[Point]()
+func getFullPath(p: Point, preds: TableRef[Point, Point]): Path =
+    var reverse: Path
+    reverse.add p
+    var cur = p
+    while preds.contains(cur):
+        cur = preds[cur]
+        reverse.add cur
 
-    q.addLast @[source]
+    for i in countdown(reverse.high, reverse.low):
+        result.add reverse[i]
+
+proc bfs(s: State, source: Point, dests: HashSet[Point]): seq[Path] =
+    var 
+        q = initDeque[Point]()
+        visited = initSet[Point](1024)
+        preds = newTable[Point, Point](1024)
+
+    q.addLast source
     while q.len > 0:
         let cur = q.popFirst()
-        let last = cur[cur.high]
-        if dests.contains(last):
-            result.add cur
-        for n in s.reachableNeighbors(last):
-            if visited.contains(n):
-                continue
-            var p = cur
-            p.add n
-            q.addLast p
-        visited.incl last
+        if dests.contains(cur):
+            result.add getFullPath(cur, preds)
+        for n in s.reachableNeighbors(cur):
+            if not (visited.contains(n) or q.contains(n)):
+                preds[n] = cur
+                q.addLast n
+        visited.incl cur
 
 func selectPath(paths: seq[Path]): Path =
     let shortestLen = min(paths.mapIt(it.len))
@@ -214,9 +225,9 @@ proc show(s: State) =
 proc playGame(state: State): (int, int) =
     var roundsPlayed = 0
     while roundsPlayed < 1000:
-        echo ""
-        echo roundsPlayed
-        show state
+        #echo ""
+        #echo roundsPlayed
+        #show state
 
         state.units.sort cmpReading
         for u in state.units:
@@ -234,7 +245,7 @@ proc playGame(state: State): (int, int) =
                 return (roundsPlayed, totalHp)
         inc roundsPlayed
 
-let state = readFile("./day15_example.txt").parseState()
+let state = readFile("./day15_example6.txt").parseState()
 let (roundsPlayed, totalHp) = playGame(state)
 echo roundsPlayed, ", ", totalHp
 echo roundsPlayed*totalHp
