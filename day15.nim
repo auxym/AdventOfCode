@@ -24,17 +24,17 @@ type
 
     Path = seq[Point]
 
-func newUnit(kind: UnitKind, x, y: int): Unit =
+func newUnit(kind: UnitKind, x, y: int, ap: int = 3): Unit =
     new result
     result.kind = kind
-    result.ap = 3
+    result.ap = ap
     result.hp = 200
     result.loc = (x, y)
 
 func `$`(u: Unit): string =
-    $u.kind & " (loc: " & $u.loc & ", hp: " & $u.hp & ")"
+    $u.kind & " (loc: " & $u.loc & ", hp: " & $u.hp & ", ap: " & $u.ap & ")"
 
-func parseState(text: string): State =
+func parseState(text: string, elfAp: int = 3): State =
     var g: Grid
     var
         units: seq[Unit]
@@ -53,7 +53,7 @@ func parseState(text: string): State =
                     units.add newUnit(Goblin, x, y)
                     gl.add Open
                 of 'E':
-                    units.add newUnit(Elf, x, y)
+                    units.add newUnit(Elf, x, y, ap=elfAp)
                     gl.add Open
                 else:
                     raise newException(ValueError, "Unknown char " & chr)
@@ -262,7 +262,31 @@ proc playGame(state: State): (int, int) =
                 return (roundsPlayed, totalHp)
         inc roundsPlayed
 
+
+## Part 1
 let state = readFile("./day15_input.txt").parseState()
 let (roundsPlayed, totalHp) = playGame(state)
-echo roundsPlayed, ", ", totalHp
 echo roundsPlayed*totalHp
+
+## Part 2
+var
+    elfAp = 4
+    pt2State: State
+    pt2Rounds, pt2Hp: int
+
+while true:
+    pt2State = readFile("./day15_input.txt").parseState(elfAp=elfAp)
+    let initElves = pt2State.units
+        .filterIt(it.kind == Elf and it.isAlive).len
+
+    (pt2Rounds, pt2Hp) = playGame(pt2State)
+    
+    let finalElves = pt2State.units
+        .filterIt(it.kind == Elf and it.isAlive).len
+
+    if finalElves == initElves:
+        break
+    else:
+        inc elfAp
+
+echo pt2Hp*pt2Rounds
