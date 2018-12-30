@@ -109,54 +109,65 @@ func dest(p: Path): Point =
 func cmpDest(a, b: Path): int =
     return cmpReading(a.dest, b.dest)
 
-func cmpFirstMove(a, b: Path): int =
-    return cmpReading(a[1], b[1])
-
-func getFullPath(p: Point, preds: TableRef[Point, Point]): Path =
-    var reverse: Path
-    reverse.add p
-    var cur = p
-    while preds.contains(cur):
-        cur = preds[cur]
-        reverse.add cur
-
-    for i in countdown(reverse.high, reverse.low):
-        result.add reverse[i]
-
-proc bfs(s: State, source: Point, dests: HashSet[Point]): seq[Path] =
+func bfs(s: State, source: Point, dests: HashSet[Point]): TableRef[Point, Path] =
     var 
-        q = initDeque[Point]()
+        q = initDeque[Path]()
         visited = initSet[Point](1024)
-        preds = newTable[Point, Point](1024)
 
-    q.addLast source
-    while q.len > 0:
+    result = newTable[Point, Path](tables.rightSize(dests.len))
+
+    q.addLast @[source]
+    while q.len > 0 and result.len < dests.len:
         let cur = q.popFirst()
-        if dests.contains(cur):
-            result.add getFullPath(cur, preds)
-        for n in s.reachableNeighbors(cur):
-            if not (visited.contains(n) or q.contains(n)):
-                preds[n] = cur
-                q.addLast n
-        visited.incl cur
+        if dests.contains(cur.dest):
+            result[cur.dest] = cur
+        for n in s.reachableNeighbors(cur.dest):
+            if not (visited.contains(n) or q.anyIt(it.dest == n)):
+                var lpth = cur
+                lpth.add n
+                q.addLast lpth
+        visited.incl cur.dest
 
-func selectPath(paths: seq[Path]): Path =
+func selectDest(paths: seq[Path]): Point =
     let shortestLen = min(paths.mapIt(it.len))
     var shortPaths = paths.filterIt(it.len == shortestLen)
 
     assert shortPaths.len > 0
     if shortPaths.len == 1:
-        return shortPaths[0]
+        return shortPaths[0].dest
 
     shortPaths.sort(cmpDest)
     shortPaths = shortPaths.filterIt(it.dest == shortPaths[0].dest)
 
     assert shortPaths.len > 0
     if shortPaths.len == 1:
-        return shortPaths[0]
+        return shortPaths[0].dest
 
-    shortPaths.sort(cmpFirstMove)
-    return shortPaths[0]
+func selectMove(s: State, u: Unit, dest: Point): Point =
+    let
+        validMoves = s.reachableNeighbors(u.loc)
+
+    var
+        altState = new State
+        shortest = int.high
+        candidates: seq[Point]
+
+    altState.grid = s.grid
+    altState.units = s.units.filterIt(it.loc != u.loc)
+    assert altState.units.len == s.units.len - 1
+
+    for mv in validMoves:
+        var ds = initSet[Point]()
+        ds.incl dest
+        let foundPaths = bfs(altState, mv, ds)
+        if foundPaths.len == 0: continue
+        let pathLen = foundPaths[dest].len
+        if pathLen < shortest:
+            shortest = pathLen
+            candidates = @[mv]
+        elif pathLen == shortest:
+            candidates.add mv
+    return candidates.sorted(cmpReading)[0]
 
 proc move(u: Unit, s: State) =
     var dests = initSet[Point]()
@@ -166,11 +177,13 @@ proc move(u: Unit, s: State) =
     if dests.len == 0:
         return
     
-    let paths = bfs(s, u.loc, dests)
+    let paths = toSeq(bfs(s, u.loc, dests).values)
     if paths.len == 0:
         return
 
-    let move = selectPath(paths)[1]
+    let chosenDest = selectDest(paths)
+    let move = selectMove(s, u, chosenDest)
+
     assert dist(u.loc, move) == 1
     u.loc = move
 
@@ -218,6 +231,7 @@ proc show(s: State) =
     var uchar: char
     for u in s.units.filter(isAlive):
         lines[u.loc.y][u.loc.x] = ($u.kind)[0]
+        lines[u.loc.y] &= " " & $u
     
     for line in lines:
         echo line
@@ -229,6 +243,7 @@ proc playGame(state: State): (int, int) =
         #echo roundsPlayed
         #show state
 
+        state.units = state.units.filter(isAlive)
         state.units.sort cmpReading
         for u in state.units:
             if not u.isAlive:
@@ -239,13 +254,15 @@ proc playGame(state: State): (int, int) =
                     .filter(isAlive)
                     .mapIt(it.hp)
                     .foldl(a+b)
-                echo state.units
-                    .filter(isAlive)
-                    .mapIt(it.hp)
+
+                #echo state.units.filter(isAlive).mapIt(it.hp)
+                #echo ""
+                #show state
+                
                 return (roundsPlayed, totalHp)
         inc roundsPlayed
 
-let state = readFile("./day15_example6.txt").parseState()
+let state = readFile("./day15_input.txt").parseState()
 let (roundsPlayed, totalHp) = playGame(state)
 echo roundsPlayed, ", ", totalHp
 echo roundsPlayed*totalHp
