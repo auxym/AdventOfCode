@@ -1,4 +1,7 @@
-import strutils, sequtils, strscans
+import strutils
+import sequtils
+import strscans, strformat
+import math
 
 type
     Instruction = tuple[op: OpCode, A, B, C: int]
@@ -92,10 +95,57 @@ func runProgram(prog: seq[Instruction], ipreg: int, initial=ZERO_STATE): State =
         ip = result[ipreg]
         inc ip
 
+func sumOfFactors(n: int): int =
+    let maxfac = n.toFloat().sqrt().floor().toInt()
+    for i in 1..maxfac:
+        if n mod i == 0:
+            result += i
+            result += (n div i)
+
+func runpt2(prog: seq[Instruction], ipreg: int, initial=ZERO_STATE): State =
+    var
+        ip = 0
+    result = initial
+    while ip <= prog.high and ip >= prog.low:
+        if ip == 3:
+            result[0] = sumOfFactors(result[4])
+            ip = 16
+        else:
+            result[ipreg] = ip
+            runIns(result, prog[ip])
+            ip = result[ipreg]
+            inc ip
+
+proc dbgProgram(prog: seq[Instruction], ipreg: int, initial=ZERO_STATE): State =
+    var
+        ip = 0
+        ui, prev: string
+
+    result = initial
+    while ip <= prog.high and ip >= prog.low:
+        ui = stdin.readLine()
+        if ui == "":
+            ui = prev
+        else:
+            prev = ui
+
+        case ui:
+            of "q":
+                break
+            of "s":
+                result[ipreg] = ip
+                let ins = prog[ip]
+                runIns(result, ins)
+                var os = fmt"{ip:d} {ins.op:s} {ins.A:d} {ins.B:d} {ins.C:d} : {result:s}"
+                ip = result[ipreg]
+                inc ip
+                echo os
+
+
 let (ipreg, program) = readInput("./day19_input.txt")
 
 let pt1 = runProgram(program, ipreg)
 echo pt1
 
 let pt2_init = [1, 0, 0, 0, 0, 0]
-echo runProgram(program, ipreg, pt2_init)
+echo runpt2(program, ipreg, pt2_init)
