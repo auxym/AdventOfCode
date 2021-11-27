@@ -1,8 +1,4 @@
-*
-!**/
-!*.*
-
-bin/
+*/bin/
 .vscode/
 */scratch.nim
 *.exe
