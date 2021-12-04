@@ -1,6 +1,7 @@
 import std/strutils
 import std/sequtils
 import utils
+import std/intsets
 
 type
   BingoCard = seq[seq[int]]
@@ -67,3 +68,23 @@ func playGame(numbers: seq[int], cards: seq[BingoCard]): int =
 let pt1Score = playGame(bingoNumbers, bingoCards)
 echo pt1Score
 doAssert pt1Score == 63424
+
+# Part 2
+func playGameUntilLast(numbers: seq[int], cards: seq[BingoCard]): int =
+  var
+    gameState: seq[BingoCardState] = newSeqWith(cards.len, initState())
+    remainingCards: IntSet
+
+  for i in 0 .. cards.high: remainingCards.incl i
+
+  for n in numbers:
+    for i in remainingCards:
+      gameState[i].update(cards[i], n)
+      if gameState[i].checkWin:
+        remainingCards.excl i
+      if remainingCards.len == 0:
+        return score(cards[i], gameState[i], n)
+
+let lastWinScore = playGameUntilLast(bingoNumbers, bingoCards)
+echo lastWinScore
+doAssert lastWinScore == 23541
