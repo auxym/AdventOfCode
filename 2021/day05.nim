@@ -31,24 +31,35 @@ let input = readFile("./input/day05_input.txt").strip().splitLines().map(parseIn
 func isHorzOrVert(ls: LineSegment): bool =
   (ls.p1.x == ls.p2.x) or (ls.p1.y == ls.p2.y)
 
-func countOverlapsHorzVert(lines: seq[LineSegment]): int =
+func sgn(x: int): int =
+  if x == 0: 0
+  elif x > 0: 1
+  else: -1
+
+func unit(ls: LineSegment): Vector =
+  let v = ls.p2 - ls.p1
+  result = (v.x.sgn, v.y.sgn)
+
+func countOverlaps(lines: seq[LineSegment], diagonals: bool): int =
   var grid = newCountTable[Vector]()
   for ls in lines:
-    if not isHorzOrVert(ls): continue
+    if (not diagonals) and (not isHorzOrVert(ls)): continue
 
-    let unit = (ls.p2 - ls.p1) / manhattan(ls.p1, ls.p2)
-    assert unit == (0, 1) or unit == (1, 0) or unit == (-1, 0) or unit == (0, -1)
+    let lsUnit = ls.unit
 
-    grid.inc(ls.p1)
+    var cur = ls.p1
     grid.inc(ls.p2)
-    var cur = ls.p1 + unit
     while cur != ls.p2:
       grid.inc(cur)
-      cur.inc(unit)
+      cur.inc(lsUnit)
 
   for (pt, count) in grid.pairs:
     if count > 1: result.inc
 
-let pt1Overlaps = countOverlapsHorzVert(input)
+let pt1Overlaps = countOverlaps(input, false)
 echo pt1Overlaps
 doAssert pt1Overlaps == 8622
+
+let pt2Overlaps = countOverlaps(input, true)
+echo pt2Overlaps
+doAssert pt2Overlaps == 22037
