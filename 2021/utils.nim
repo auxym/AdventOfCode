@@ -26,7 +26,13 @@ func ccw*(v: Vector): Vector = # Rotate 90 degrees counter-clockwise
   (-v.y, v.x)
 
 func `+`*(a, b: Vector): Vector = (a.x + b.x, a.y + b.y)
+func `-`*(a, b: Vector): Vector = (a.x - b.x, a.y - b.y)
 func `*`*(u: int, v: Vector): Vector = (u * v.x, u * v.y)
+func `/`*(a: Vector, b: int): Vector = (a.x div b, a.y div b)
+
+func inc*(a: var Vector, b: Vector) =
+  a.x.inc(b.x)
+  a.y.inc(b.y)
 
 func manhattan*(a, b: Vector): Natural =
   abs(b.x - a.x) + abs(b.y - a.y)
