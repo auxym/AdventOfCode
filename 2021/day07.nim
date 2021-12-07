@@ -13,9 +13,7 @@ func evalFuel2(positions: seq[int], moveTo: int): int =
     let dist = (p - moveTo).abs
     result.inc((dist * (dist + 1)) div 2)
 
-type FF = proc(p: seq[int], m: int): int
-
-func findAlignment(positions: seq[int], fuelfun: FF): tuple[fuel, pos: int] =
+func findAlignment(positions: seq[int], fuelfun: proc(p: seq[int], m: int): int): tuple[fuel, pos: int] =
   result.fuel = int.high
   for candidate in 0 .. positions.max:
     let candidateFuel: int = fuelfun(positions, candidate)
