@@ -66,3 +66,19 @@ for i in 1..100:
   totalFlashes.inc f
 
 echo totalFlashes
+
+# Part 2
+
+func allFlashed(g: OctopusGrid): bool =
+  for (v, oc) in g.tilePairs:
+    if not oc.hasFlashed:
+      return false
+  return true
+
+grid = input.parseInput
+var i = 0
+while not grid.allFlashed:
+  let (newGrid, f) = grid.step
+  grid = newGrid
+  inc i
+echo i
