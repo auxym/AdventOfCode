@@ -6,6 +6,7 @@ type
   Vector* = tuple[x, y: int]
   WeightedEdge*[T] = tuple[elem: T, weight: int]
   WeightedAdjList*[T] = TableRef[T, Table[T, int]]
+  ArrayGrid*[a, b: static[int], T] = array[a, array[b, T]]
 
 func cw*(c: Compass): Compass =
   if c == Compass.high:
@@ -160,6 +161,53 @@ proc dEchoHl*(s: string, hlPos: set[int16]) =
 
 func peek*[T](s: HashSet[T]): T =
   for e in s: return e
+
+func `[]`*[a, b, T](g: ArrayGrid[a, b, T], v: Vector): T =
+  g[v.y][v.x]
+
+func `[]`*[a, b, T](g: var ArrayGrid[a, b, T], v: Vector): var T =
+  g[v.y][v.x]
+
+func `[]=`*[a, b, T](g: var ArrayGrid[a, b, T], v: Vector, val: T) =
+  g[v.y][v.x] = val
+
+iterator tilePairs*[a, b, T](g: ArrayGrid[a, b, T]): (Vector, T) =
+  for (i, row) in g.pairs:
+    for (j, elem) in row.pairs:
+      yield ((j, i), elem)
+
+iterator tilemPairs*[a, b, T](g: var ArrayGrid[a, b, T]): (Vector, var T) =
+  for (i, row) in g.mpairs:
+    for (j, elem) in row.mpairs:
+      yield ((j, i), elem)
+
+iterator adjacentVectors*[a, b, T](g: ArrayGrid[a, b, T], at: Vector, diag = true): Vector =
+  if at.x > 0:
+    yield (at.x - 1, at.y)
+  if at.x < g[at.y].high:
+    yield (at.x + 1, at.y)
+  if at.y > 0:
+    yield (at.x, at.y - 1)
+  if at.y < g.high:
+    yield (at.x, at.y + 1)
+
+  if diag:
+    if at.x > 0 and at.y > 0:
+      yield (at.x - 1, at.y - 1)
+    if at.x > 0 and at.y < g.high:
+      yield (at.x - 1, at.y + 1)
+    if at.x < g[at.y].high and at.y > 0:
+      yield (at.x + 1, at.y - 1)
+    if at.x < g[at.y].high and at.y < g.high:
+      yield (at.x + 1, at.y + 1)
+
+iterator adjacentPairs*[a, b, T](g: ArrayGrid[a, b, T], at: Vector, diag = true): (Vector, T) =
+  for v in g.adjacentVectors(at, diag):
+    yield (v, g[v])
+
+iterator adjacent*[a, b, T](g: ArrayGrid[a, b, T], at: Vector, diag = true): T =
+  for v in g.adjacentVectors(at, diag):
+    yield g[v]
 
 export
   tables.contains,
