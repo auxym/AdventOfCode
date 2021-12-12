@@ -45,7 +45,13 @@ func parseInput(s: string): CaveGraph =
     else:
       result[parts[1]] = toHashSet([parts[0]])
 
-func findPathsPart1(g: CaveGraph): Natural =
+func containsTwoSmall(path: seq[string]): bool =
+  # Path contains two occurences of small cave
+  for e in path:
+    if e.kind == ckSmall and path.count(e) > 1:
+      return true
+
+func findPaths(g: CaveGraph, part: 1..2): Natural =
   var stack: seq[seq[string]]
   for nb in g["start"]:
     stack.add @["start", nb]
@@ -59,8 +65,13 @@ func findPathsPart1(g: CaveGraph): Natural =
       of ckLarge:
         stack.add curPath & neighbor
       of ckSmall:
-        if neighbor notin curPath:
-          stack.add curPath & neighbor
+        case part:
+        of 1:
+          if neighbor notin curPath:
+            stack.add curPath & neighbor
+        of 2:
+          if (neighbor notin curPath) or (not curPath.containsTwoSmall):
+            stack.add curPath & neighbor
       of ckEnd:
         result.inc
         #debugEcho join(curPath & neighbor, ",")
@@ -68,36 +79,5 @@ func findPathsPart1(g: CaveGraph): Natural =
         discard
 
 let cave = input.parseInput
-echo cave.findPathsPart1
-
-#Part 2
-
-func containsTwoSmall(path: seq[string]): bool =
-  # Path contains two occurences of small cave
-  for e in path:
-    if e.kind == ckSmall and path.count(e) > 1:
-      return true
-
-func findPathsPart2(g: CaveGraph): Natural =
-  var stack: seq[seq[string]]
-  for nb in g["start"]:
-    stack.add @["start", nb]
-
-  while stack.len > 0:
-    let
-      curPath = stack.pop
-      curNode = curPath[^1]
-    for neighbor in g[curNode]:
-      case neighbor.kind:
-      of ckLarge:
-        stack.add curPath & neighbor
-      of ckSmall:
-        if (neighbor notin curPath) or (not curPath.containsTwoSmall):
-          stack.add curPath & neighbor
-      of ckEnd:
-        result.inc
-        #debugEcho join(curPath & neighbor, ",")
-      of ckStart:
-        discard
-
-echo cave.findPathsPart2
+echo cave.findPaths(1)
+echo cave.findPaths(2)
