@@ -209,6 +209,11 @@ iterator adjacent*[a, b, T](g: ArrayGrid[a, b, T], at: Vector, diag = true): T =
   for v in g.adjacentVectors(at, diag):
     yield g[v]
 
+func parseVector*(s: string): Vector =
+  let parts = s.getInts
+  assert parts.len == 2
+  result = (parts[0], parts[1])
+
 export
   tables.contains,
   tables.hasKey,
