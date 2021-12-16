@@ -7,6 +7,7 @@ type
   WeightedEdge*[T] = tuple[elem: T, weight: int]
   WeightedAdjList*[T] = TableRef[T, Table[T, int]]
   ArrayGrid*[a, b: static[int], T] = array[a, array[b, T]]
+  SeqGrid*[T] = seq[seq[T]]
 
 func cw*(c: Compass): Compass =
   if c == Compass.high:
@@ -213,6 +214,24 @@ func parseVector*(s: string): Vector =
   let parts = s.getInts
   assert parts.len == 2
   result = (parts[0], parts[1])
+
+func `[]`*[T](g: SeqGrid[T], v: Vector): T =
+  g[v.y][v.x]
+
+iterator neighbors*[T](g: SeqGrid[T], v: Vector): Vector =
+  for disp in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+    let nbv = v + disp
+    if nbv.x in 0..(g[v.y].high) and nbv.y in 0..g.high:
+      yield nbv
+
+iterator neighborPairs*[T](g: SeqGrid[T], v: Vector): (Vector, T) =
+  for nbv in g.neighbors(v):
+    yield(nbv, g[nbv])
+
+iterator locs*[T](g: SeqGrid[T]): Vector =
+  for i in 0..g.high:
+    for j in 0..g[i].high:
+      yield (j, i)
 
 export
   tables.contains,
