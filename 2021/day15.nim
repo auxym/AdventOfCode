@@ -1,22 +1,9 @@
-
 import std/sequtils
 import std/strutils
 import std/tables
 import std/heapqueue
 import utils
 
-#let input = """
-#1163751742
-#1381373672
-#2136511328
-#3694931569
-#7463417111
-#1319128137
-#1359912421
-#3125421639
-#1293138521
-#2311944581
-#"""
 let input = readFile "./input/day15_input.txt"
 
 type RiskMap = SeqGrid[int]
@@ -53,6 +40,22 @@ let
   map = parseInput input
   start = (0, 0)
   target = (map[map.high].high, map.high)
-
-let lowestRisk = map.dijkstra(start, target)
+  lowestRisk = map.dijkstra(start, target)
 echo lowestRisk
+
+# Part 2
+
+func genPart2Map(m: RiskMap): RiskMap =
+  for rowTile in 0..4:
+    for row in m:
+      var newRow: seq[int]
+      for colTile in 0..4:
+        let k = colTile + rowTile
+        newRow = newRow & row.mapIt((it + k - 1) mod 9 + 1)
+      result.add newRow
+
+let
+  pt2Map = map.genPart2Map
+  target2 = (pt2Map[pt2Map.high].high, pt2Map.high)
+  lowestDist2 = pt2Map.dijkstra(start, target2)
+echo lowestDist2
