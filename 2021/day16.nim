@@ -1,6 +1,5 @@
 import std/strutils
 import std/sequtils
-import std/strformat
 
 const limbsz = 32
 
@@ -18,6 +17,7 @@ type BitsNode = ref object
     value: uint
   of nkOperator:
     children: seq[BitsNode]
+    op: uint
 
 type BitsParser = object
   bits: BitSeq
@@ -99,7 +99,8 @@ proc packet(ps: var BitsParser): BitsNode =
     result = BitsNode(
       version: version,
       kind: nkOperator,
-      children: ps.opChildren()
+      children: ps.opChildren(),
+      op: kind
     )
 
 proc toBitSeq(s: string): BitSeq =
@@ -127,13 +128,38 @@ func versionSum(p: BitsNode): int =
       for other in c.children:
         stack.add other
 
-let transmission = readFile("./input/day16_input.txt").parseBits
+func eval(node: BitsNode): uint =
+  if node.kind == nkLiteral:
+    result = node.value
+  else:
+    let cvals = node.children.map(eval)
+    result = case node.op:
+    of 0:
+      cvals.foldl(a+b)
+    of 1:
+      cvals.foldl(a*b)
+    of 2:
+      cvals.min
+    of 3:
+      cvals.max
+    of 5:
+      if cvals[0] > cvals[1]: 1 else: 0
+    of 6:
+      if cvals[0] < cvals[1]: 1 else: 0
+    of 7:
+      if cvals[0] == cvals[1]: 1 else: 0
+    else:
+      doAssert false
+      uint.high
 
+let transmission = readFile("./input/day16_input.txt").parseBits
 echo transmission.versionSum
+echo transmission.eval
+
 
 # Unit tests
 
-const dotest = true
+const dotest = false
 when dotest:
   import std/unittest
   import std/strformat
