@@ -2,4 +2,7 @@
 .vscode/
 */scratch.nim
 *.exe
+*.dot
+*.png
+*.svg
 profile_results.txt
