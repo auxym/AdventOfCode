@@ -1,5 +1,12 @@
-import regex, sequtils, strutils, algorithm, tables, strformat
-import terminal, sets
+import regex
+import std/heapqueue
+import std/sequtils
+import std/strutils
+import std/algorithm
+import std/tables
+import std/strformat
+import std/terminal
+import std/sets
 
 type
   Compass* = enum North, East, South, West
@@ -8,6 +15,25 @@ type
   WeightedAdjList*[T] = TableRef[T, Table[T, int]]
   ArrayGrid*[a, b: static[int], T] = array[a, array[b, T]]
   SeqGrid*[T] = seq[seq[T]]
+
+type PriorityQueueElem*[T] = object
+  prio: int
+  val: T
+
+type MinPriorityQueue*[T] = HeapQueue[PriorityQueueElem[T]]
+
+proc `<`*[T](a, b: PriorityQueueElem[T]): bool = a.prio < b.prio
+
+proc push*[T](q: var MinPriorityQueue[T], x: T, priority: int) =
+  q.push PriorityQueueElem[T](prio: priority, val: x)
+
+proc pop*[T](q: var MinPriorityQueue[T]): T =
+  let e: PriorityQueueElem[T] = heapqueue.pop(q)
+  result = e.val
+
+proc popWithPriority*[T](q: var MinPriorityQueue[T]): (T, int) =
+  let e: PriorityQueueElem[T] = heapqueue.pop(q)
+  result = (e.val, e.prio)
 
 func cw*(c: Compass): Compass =
   if c == Compass.high:
@@ -233,9 +259,12 @@ iterator locs*[T](g: SeqGrid[T]): Vector =
     for j in 0..g[i].high:
       yield (j, i)
 
+
+
 export
   tables.contains,
   tables.hasKey,
   tables.keys, tables.values, tables.pairs,
   tables.`[]=`,
-  tables.`[]`
+  tables.`[]`,
+  heapqueue.len
