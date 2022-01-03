@@ -1,3 +1,5 @@
+# Runs in about 20 s on my i5-4310U laptop
+
 import std/strutils
 import std/sequtils
 import std/strformat

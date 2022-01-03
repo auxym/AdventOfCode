@@ -136,7 +136,10 @@ func moves(curState: GameState, board: Board, src: Vector): seq[tuple[loc: Vecto
     let (curloc, curEnergy) = q.popFirst
     visited.incl curloc
 
-    if curState.isFinalSpot(curloc, amphi): return @[(curloc, curEnergy)]
+    if curState.isFinalSpot(curloc, amphi):
+      return @[(curloc, curEnergy)]
+    elif src.isRoom and curLoc.isHallway and curLoc notin immOutsideRoom:
+      result.add (curLoc, curEnergy)
 
     for nb in board[curloc]:
       let nbEnergy = curEnergy + amphi.stepCost
@@ -145,9 +148,6 @@ func moves(curState: GameState, board: Board, src: Vector): seq[tuple[loc: Vecto
 
       if (nb.isRoom and nb.x != src.x) and not isLegalRoomMove(curState, nb, amphi):
         continue
-
-      if nb notin immOutsideRoom and not (src.isHallway and nb.isHallway):
-        result.add (nb, nbEnergy)
 
       q.addLast (nb, nbEnergy)
 
@@ -158,7 +158,11 @@ func nextStates(curState: GameState, board: Board): seq[(GameState, int)] =
       var ns = curState
       ns[mvLoc] = amphi
       ns[startLoc] = Amphipod.none
-      result.add (ns, mvCost)
+
+      if isFinalSpot(ns, mvLoc, ns[mvLoc]):
+        return @[(ns, mvCost)]
+      else:
+        result.add (ns, mvCost)
 
 proc organizeDijkstra(start: GameState, board: Board): int =
   let target = finalState()
