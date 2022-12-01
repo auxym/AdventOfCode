@@ -8,8 +8,8 @@ import std/strformat
 import std/terminal
 import std/sets
 
-export std/tables
-export std/heapqueue
+export tables
+export heapqueue
 
 type
   Compass* = enum North, East, South, West
