@@ -88,6 +88,18 @@ func digits*(i: int): seq[int] =
     j = j div 10
   result = result.reversed
 
+func cycle*[T: Ordinal](x: T): T =
+  if x == T.high:
+    T.low
+  else:
+    x.succ
+
+func cycleBackwards*[T: Ordinal](x: T): T =
+  if x == T.low:
+    T.high
+  else:
+    x.pred
+
 func toBitSet*[T: Ordinal](s: openArray[T]): set[T] =
   for e in s: result.incl e
 
@@ -235,7 +247,6 @@ iterator adjacentPairs*[a, b, T](g: ArrayGrid[a, b, T], at: Vector, diag = true)
   for v in g.adjacentVectors(at, diag):
     yield (v, g[v])
 
-iterator adjacent*[a, b, T](g: ArrayGrid[a, b, T], at: Vector, diag = true): T =
   for v in g.adjacentVectors(at, diag):
     yield g[v]
 
