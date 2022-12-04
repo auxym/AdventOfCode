@@ -76,7 +76,11 @@ func toVector*(d: Compass): Vector =
   of South: (0, -1)
 
 func getInts*(s: string): seq[int] =
-  let expint = re"-?\d+"
+  const expint = re"-?\d+"
+  result = s.findAndCaptureAll(expint).map(parseInt)
+
+func getPositiveInts*(s: string): seq[int] =
+  let expint = re"\d+"
   result = s.findAndCaptureAll(expint).map(parseInt)
 
 func digits*(i: int): seq[int] =
@@ -100,11 +104,14 @@ func cycleBackwards*[T: Ordinal](x: T): T =
   else:
     x.pred
 
-func toBitSet*[T: Ordinal](s: openArray[T]): set[T] =
+func toOrdinalSet*[T: Ordinal](s: openArray[T]): set[T] =
   for e in s: result.incl e
 
-func toBitSet*(s: string): set[char] =
+func toOrdinalSet*(s: string): set[char] =
   for c in s: result.incl c
+
+func toOrdinalSet*[T: Ordinal](s: HSlice[T, T]): set[T] =
+  for e in s: result.incl e
 
 func newWeightedAdjList*[T](initialSize = 0): WeightedAdjList[T] =
   if initialSize <= 0:
