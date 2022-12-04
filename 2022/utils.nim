@@ -204,6 +204,9 @@ proc dEchoHl*(s: string, hlPos: set[int16]) =
 func peek*[T](s: HashSet[T]): T =
   for e in s: return e
 
+func peek*[T: Ordinal](s: set[T]): T =
+  for e in s: return e
+
 func `[]`*[a, b, T](g: ArrayGrid[a, b, T], v: Vector): T =
   g[v.y][v.x]
 
@@ -272,3 +275,8 @@ iterator locs*[T](g: SeqGrid[T]): Vector =
   for i in 0..g.high:
     for j in 0..g[i].high:
       yield (j, i)
+
+iterator groups*[T](s: openArray[T], n: Natural): seq[T] =
+  for i in countup(0, s.high, n):
+    let stop = min((i + n - 1), s.high)
+    yield s[i .. stop]
