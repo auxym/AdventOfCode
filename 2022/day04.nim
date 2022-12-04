@@ -1,11 +1,8 @@
 import ./utils
 import std/strutils
 
-type
-  SectionID = int
-
-  PairAssignment = object
-    elf1, elf2: Slice[SectionID]
+type PairAssignment = object
+    elf1, elf2: Slice[int]
 
 proc parseInput(s: string): seq[PairAssignment] =
   for line in s.strip.splitLines:
