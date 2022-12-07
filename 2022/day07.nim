@@ -66,12 +66,27 @@ func buildSizeTable(root: FsNode): Table[string, int] =
       if c.kind == Dir:
         stack.add c
 
-let rootDir = readFile("./input/day07_input.txt").parseInput
+let
+  rootDir = readFile("./input/day07_input.txt").parseInput
+  sizeTable = buildSizeTable rootDir
 
 proc part1: int =
-  let sizeTable = buildSizeTable rootDir
   for size in sizeTable.values:
     if size <= 100_000:
       result.inc size
 
 echo part1()
+
+proc part2: int =
+  let
+    diskSpace = 70_000_000
+    requiredSpace = 30_000_000
+    currentSpace = diskSpace - sizeTable["/"]
+    minToBeFreed = requiredSpace - currentSpace
+
+  result = int.high
+  for size in sizeTable.values:
+    if size >= minToBeFreed and size < result:
+      result = size
+
+echo part2()
