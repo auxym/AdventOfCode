@@ -18,6 +18,7 @@ type
   WeightedAdjList*[T] = TableRef[T, Table[T, int]]
   ArrayGrid*[a, b: static[int], T] = array[a, array[b, T]]
   SeqGrid*[T] = seq[seq[T]]
+  SomeGrid* = ArrayGrid | SeqGrid
 
 type PriorityQueueElem*[T] = object
   prio: int
@@ -282,6 +283,18 @@ iterator locs*[T](g: SeqGrid[T]): Vector =
   for i in 0..g.high:
     for j in 0..g[i].high:
       yield (j, i)
+
+proc isEdge*(grid: SomeGrid, loc: Vector): bool =
+  loc.y == grid.low or
+  loc.y == grid.high or
+  loc.x == grid[loc.y].low or
+  loc.x == grid[loc.y].high
+
+proc isInside*(grid: SomeGrid, loc: Vector): bool =
+  loc.y >= grid.low and
+  loc.y <= grid.high and
+  loc.x >= grid[loc.y].low and
+  loc.x <= grid[loc.y].high
 
 iterator groups*[T](s: openArray[T], n: Natural): seq[T] =
   for i in countup(0, s.high, n):
