@@ -269,6 +269,9 @@ func parseVector*(s: string): Vector =
 func `[]`*[T](g: SeqGrid[T], v: Vector): T =
   g[v.y][v.x]
 
+func `[]=`*[T](g: var SeqGrid[T], v: Vector, x: T) =
+  g[v.y][v.x] = x
+
 iterator neighbors*[T](g: SeqGrid[T], v: Vector): Vector =
   for disp in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
     let nbv = v + disp
