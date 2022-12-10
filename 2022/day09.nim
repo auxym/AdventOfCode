@@ -49,3 +49,33 @@ func part1(input: string): int =
 let input = readFile("./input/day09_input.txt")
 
 echo part1(input)
+
+# Part 2
+
+type LongRope = array[10, Vector]
+
+proc move(rope: var LongRope, by: Vector) =
+  rope[0].inc by
+  assert abs(by.x) + abs(by.y) == 1
+  for i in 1..rope.high:
+    let
+      head = rope[i - 1]
+      tail = rope[i]
+    if not isAdjacent(head, tail):
+      rope[i] = tail + dirVector(head - tail)
+      assert isAdjacent(head, rope[i])
+
+func part2(input: string): int =
+  var
+    tailpos = initHashSet[Vector]()
+    rope: LongRope
+  tailpos.incl rope[rope.high]
+  for line in input.strip.splitLines:
+    let parts = line.splitWhitespace
+    for i in 0 ..< (parseInt parts[1]):
+      rope.move(line[0].toVector)
+      tailpos.incl rope[rope.high]
+
+  result = tailpos.card
+
+echo part2(input)
