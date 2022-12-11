@@ -66,13 +66,17 @@ func exec(op: MonkeyOperation, old: int): int =
     of '+': result = a + b
     else: doAssert false
 
-proc playRound(monkeys: var seq[MonkeyData]) =
+proc playRound(monkeys: var seq[MonkeyData], worryDivisor: int) =
+  # For part 2:
+  let masterDivisor = monkeys.mapIt(it.divisor).foldl(a*b)
+
   for i in 0 .. monkeys.high:
     while monkeys[i].items.len > 0:
       monkeys[i].inspectCount.inc
       var item = monkeys[i].items.popFirst
       item = monkeys[i].op.exec(item)
-      item = item div 3
+      item = item div worryDivisor
+      item = item mod masterDivisor
       let
         testRes = item mod (monkeys[i].divisor) == 0
         target = monkeys[i].targets[testRes]
@@ -80,12 +84,22 @@ proc playRound(monkeys: var seq[MonkeyData]) =
 
 let input = readFile("./input/day11_input.txt").parseInput
 
-func part1(allMonkeys: seq[MonkeyData]): int =
-  var working = allMonkeys
-  for i in 0 ..< 20:
-    working.playRound
-  var counts = working.mapIt(it.inspectCount)
+func monkeyBusiness(monkeys: seq[MonkeyData]): int =
+  var counts = monkeys.mapIt(it.inspectCount)
   sort counts
   result = counts[^1] * counts[^2]
 
+func part1(allMonkeys: seq[MonkeyData]): int =
+  var working = allMonkeys
+  for i in 0 ..< 20:
+    working.playRound(3)
+  result = monkeyBusiness working
+
+func part2(allMonkeys: seq[MonkeyData]): int =
+  var working = allMonkeys
+  for i in 0 ..< 10_000:
+    working.playRound(1)
+  result = monkeyBusiness working
+
 echo part1(input)
+echo part2(input)
