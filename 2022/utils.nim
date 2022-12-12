@@ -141,6 +141,31 @@ iterator traverseDfs*[T](g: WeightedAdjList[T], start: T): WeightedEdge[T] =
     for (elem, wt) in g[cur.elem].pairs:
       stack.add (elem, wt)
 
+type DistPair[T] = tuple[v: T, r: int]
+
+func `<`*[T](a, b: DistPair[T]): bool = a.r < b.r
+
+func dijkstra*[T](graph: WeightedAdjList[T], start: T, to: T): int =
+  # Implementation of Dijkstra's algorithm based on:
+  # http://blog.aos.sh/2018/02/24/understanding-dijkstras-algorithm/
+
+  var
+    dist = initTable[T, int]()
+    q = initHeapQueue[DistPair[T]]()
+
+  dist[start] = 0
+  q.push((start, dist[start]))
+
+  while q.len > 0:
+    let (cur, curDist) = q.pop
+    if cur == to:
+      return curDist
+    for (next, nextDist) in graph[cur].pairs:
+      let tentative = curDist + nextDist
+      if tentative < dist.getOrDefault(next, int.high):
+        dist[next] = tentative
+        q.push (next, dist[next])
+
 iterator combinations*(n, k: int): seq[int] =
   let hi = n-1
   var
