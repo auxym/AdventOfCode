@@ -4,6 +4,7 @@ import std/sequtils
 import std/strutils
 import std/algorithm
 import std/tables
+import std/options
 import std/strformat
 import std/terminal
 import std/sets
@@ -141,30 +142,44 @@ iterator traverseDfs*[T](g: WeightedAdjList[T], start: T): WeightedEdge[T] =
     for (elem, wt) in g[cur.elem].pairs:
       stack.add (elem, wt)
 
+func inverted*[T](graph: WeightedAdjList[T]): WeightedAdjList[T] =
+  result = newWeightedAdjList[T]()
+  for (node, edgeTable) in graph.pairs:
+    result.addNode node
+    for (destNode, weight) in edgeTable.pairs:
+      result.addEdge(destNode, node, weight)
+
 type DistPair[T] = tuple[v: T, r: int]
 
 func `<`*[T](a, b: DistPair[T]): bool = a.r < b.r
 
-func dijkstra*[T](graph: WeightedAdjList[T], start: T, to: T): int =
+func dijkstraImpl[T](graph: WeightedAdjList[T], start: T, to: Option[T]): Table[T, int] =
   # Implementation of Dijkstra's algorithm based on:
   # http://blog.aos.sh/2018/02/24/understanding-dijkstras-algorithm/
 
-  var
-    dist = initTable[T, int]()
-    q = initHeapQueue[DistPair[T]]()
-
-  dist[start] = 0
-  q.push((start, dist[start]))
+  var q = initHeapQueue[DistPair[T]]()
+  result[start] = 0
+  q.push((start, result[start]))
 
   while q.len > 0:
     let (cur, curDist) = q.pop
-    if cur == to:
-      return curDist
+    if to.isSome and cur == to.get:
+      # Early exit when destination is specified
+      return
     for (next, nextDist) in graph[cur].pairs:
       let tentative = curDist + nextDist
-      if tentative < dist.getOrDefault(next, int.high):
-        dist[next] = tentative
-        q.push (next, dist[next])
+      if tentative < result.mgetOrPut(next, int.high):
+        result[next] = tentative
+        q.push (next, result[next])
+
+func dijkstra*[T](graph: WeightedAdjList[T], start: T, to: T): int =
+  ## Return shortest path from node `start` to node `to`
+  let distances = dijkstraImpl(graph, start, to.some)
+  result = distances[to]
+
+func dijkstra*[T](graph: WeightedAdjList[T], start: T): Table[T, int] =
+  ## Return shortest paths from node `start` to all reachable nodes in graph
+  dijkstraImpl(graph, start, T.none)
 
 iterator combinations*(n, k: int): seq[int] =
   let hi = n-1

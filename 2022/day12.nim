@@ -56,3 +56,13 @@ let input = readFile("./input/day12_input.txt").parseInput
 
 # Part 1
 echo input.graph.dijkstra(input.startPos, input.endPos)
+
+# Part 2
+proc part2: int =
+  result = int.high
+  let distances = input.graph.inverted().dijkstra(input.endPos)
+  for (tile, dist) in distances.pairs:
+    if tile.height == 'a' and dist < result:
+      result = dist
+
+echo part2()
