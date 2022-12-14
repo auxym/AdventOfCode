@@ -36,11 +36,6 @@ proc advance(lexer: var LexerState): char =
   result = lexer.peek
   lexer.cur.inc
 
-proc match(lexer: var LexerState, expected: char): bool =
-  if not lexer.isAtEnd and lexer.peek == expected:
-    discard lexer.advance
-    result = true
-
 func getToken(lexer: LexerState, kind: TokenKind): Token =
   Token(kind: kind, text: lexer.text[lexer.start ..< lexer.cur])
 
@@ -122,6 +117,23 @@ func treeRepr(node: Node, idt: int = 0): string =
       result.add "\n"
       result.add c.treeRepr(idt + 2)
 
+func repr(node: Node, buf: var string) =
+  case node.kind:
+  of nkIntLit:
+    buf.add $node.intVal
+  of nkList:
+    buf.add '['
+    for c in node.children:
+      repr(c, buf)
+      buf.add ','
+    if node.children.len > 0:
+      buf[^1] = ']'
+    else:
+      buf.add ']'
+
+func `$`(node: Node): string =
+  repr(node, result)
+
 type Input = seq[array[2, Node]]
 
 func parseInput(text: string): Input =
@@ -130,7 +142,7 @@ func parseInput(text: string): Input =
     assert lines.len == 2
     result.add [lines[0].parse, lines[1].parse]
 
-func cmp(a, b: Node): int =
+func cmpNode(a, b: Node): int =
   if a.kind == nkIntLit and b.kind == nkIntLit:
     return cmp(a.intval, b.intval)
 
@@ -146,7 +158,7 @@ func cmp(a, b: Node): int =
       elif cur > b.children.high:
         return 1
 
-      let childrenCmpResult = cmp(a.children[cur], b.children[cur])
+      let childrenCmpResult = cmpNode(a.children[cur], b.children[cur])
       if childrenCmpResult == 0:
         continue
       else:
@@ -156,26 +168,26 @@ func cmp(a, b: Node): int =
     var tmp = new Node
     tmp.kind = nkList
     tmp.children.add b
-    return cmp(a, tmp)
+    return cmpNode(a, tmp)
 
   elif a.kind == nkIntLit and b.kind == nkList:
     var tmp = new Node
     tmp.kind = nkList
     tmp.children.add a
-    return cmp(tmp, b)
+    return cmpNode(tmp, b)
+
+# Part 1
 
 func part1(inp: Input): int =
   for (idx, pair) in inp.pairs:
-    if cmp(pair[0], pair[1]) < 0:
-      #debugEcho idx + 1
+    if cmpNode(pair[0], pair[1]) < 0:
       result.inc (idx + 1)
 
-#let input = readFile("./input/day13_example.txt").parseInput
 let input = readFile("./input/day13_input.txt").parseInput
 
 echo part1(input)
 
-# Part 2 NOT WORKING YET
+# Part 2
 
 func part2(inp: Input): int =
   let dividers = """
@@ -193,7 +205,7 @@ func part2(inp: Input): int =
         t.add packet
     for packet in dividers:
       t.add packet
-    sort t
+    sort(t, cmpNode)
     t
 
   result = 1
