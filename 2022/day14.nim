@@ -30,6 +30,7 @@ iterator iterLine(a, b: Vector): Vector =
 
 func parseInput(text: string): Input =
   result.lowPoint = int.low
+  result.map = initTable[Vector, CaveTile](100_000)
 
   for line in text.strip.splitLines:
     let vecs = line.split(" -> ").map(parseVector)
@@ -70,8 +71,9 @@ func part2(inp: Input): int =
     var sandUnit: Vector = sandSource
     while not atRest:
       atRest = true
-      for candidate in [(0, 1), (-1, 1), (1, 1)].mapIt(sandUnit + it):
-        if (candidate notin map) and (candidate.y < floor):
+      for dir in [(0, 1), (-1, 1), (1, 1)]:
+        let candidate = sandUnit + dir
+        if (candidate.y < floor) and (candidate notin map):
           sandUnit = candidate
           atRest = false
           break
