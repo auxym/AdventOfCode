@@ -41,24 +41,16 @@ func parseInput(text: string): Input =
           result.lowPoint = pt.y
 
 let input = readFile("./input/day14_input.txt").parseInput
-#let input = """
-#498,4 -> 498,6 -> 496,6
-#503,4 -> 502,4 -> 502,9 -> 494,9
-#""".parseInput
-
+const sandSource: Vector = (500, 0)
 
 func part1(inp: Input): int =
-  var
-    map = inp.map
-    abyssFlag = false
-
-  while not abyssFlag:
+  var map = inp.map
+  while true:
     var atRest = false
-    var sandUnit: Vector = (500, 0)
-    while not (atRest or abyssFlag):
+    var sandUnit: Vector = sandSource
+    while not atRest:
       if sandUnit.y > inp.lowPoint:
-        abyssFlag = true
-        break
+        return
       atRest = true
       for candidate in [(0, 1), (-1, 1), (1, 1)]:
         if (sandUnit + candidate) notin map:
@@ -69,4 +61,25 @@ func part1(inp: Input): int =
         map[sandUnit] = Sand
         result.inc
 
+func part2(inp: Input): int =
+  var map = inp.map
+  let floor = inp.lowPoint + 2
+
+  while true:
+    var atRest = false
+    var sandUnit: Vector = sandSource
+    while not atRest:
+      atRest = true
+      for candidate in [(0, 1), (-1, 1), (1, 1)].mapIt(sandUnit + it):
+        if (candidate notin map) and (candidate.y < floor):
+          sandUnit = candidate
+          atRest = false
+          break
+      if atRest:
+        map[sandUnit] = Sand
+        result.inc
+        if sandUnit == sandSource:
+          return
+
 echo part1(input)
+echo part2(input)
