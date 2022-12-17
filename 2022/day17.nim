@@ -1,4 +1,5 @@
 import std/strutils
+import std/sequtils
 import std/sets
 import ./utils
 
@@ -98,16 +99,71 @@ proc addRock(pile: var HashSet[Vector], jets: var JetState, rockIdx: int) =
 
   pile.incl rock
 
-proc part1: int =
+proc part1(n: int): int =
   var
     shapeIdx = 0
     jets = initJetState()
     pile = initHashSet[Vector]()
 
-  for i in 0 ..< 2022:
+  for i in 0 ..< n:
     pile.addRock(jets, shapeIdx)
     shapeIdx = (shapeIdx + 1)  mod RockShapes.len
 
   result = pile.corners()[1].y + 1
 
-echo part1()
+# Part 2
+
+func height(pile: HashSet[Vector]): int =
+  if pile.len == 0:
+    0
+  else:
+    pile.corners[1].y + 1
+
+type SeenTableValue = ref object
+  prevIter: int
+  di: seq[int]
+  prevH: int
+  dh: seq[int]
+
+proc part2(n: int64): int64 =
+  var
+    shapeIdx = 0
+    jets = initJetState()
+    pile = initHashSet[Vector]()
+    seen: Table[(int, int), SeenTableValue]
+    history: seq[int] = @[0]
+
+  for i in 0 ..< 10_000:
+    pile.addRock(jets, shapeIdx)
+    shapeIdx = (shapeIdx + 1)  mod RockShapes.len
+
+    let
+      p = (shapeIdx, jets.cur)
+      h = pile.height
+    history.add h
+    if p in seen:
+      var val = seen[p]
+      val.di.add i - val.prevIter
+      val.dh.add h - val.prevH
+      val.prevIter = i
+      val.prevH = h
+      if val.dh.len > 1 and val.dh[0] == val.dh[1]:
+        let
+          di = val.di[0]
+          dh = val.dh[0]
+          baseIter = val.prevIter - val.di[0]
+          baseHeight = val.prevH - val.dh[0]
+          pattern = history[^(val.di[0] + 1) .. ^2].mapIt(it - baseHeight)
+        return ((n - 1 - baseIter) div di) * dh + baseHeight + pattern[(n - 1 - baseIter) mod di]
+    else:
+      var val = new SeenTableValue
+      val.prevIter = i
+      val.prevH = h
+      seen[p] = val
+
+const
+  Part1Iterations = 2022
+  Part2Iterations = 1_000_000_000_000'i64
+
+echo part1(Part1Iterations)
+echo part2(Part2Iterations)
