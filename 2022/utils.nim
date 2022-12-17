@@ -168,7 +168,7 @@ func dijkstraImpl[T](graph: WeightedAdjList[T], start: T, to: Option[T]): Table[
       return
     for (next, nextDist) in graph[cur].pairs:
       let tentative = curDist + nextDist
-      if tentative < result.mgetOrPut(next, int.high):
+      if tentative < result.getOrDefault(next, int.high):
         result[next] = tentative
         q.push (next, result[next])
 
