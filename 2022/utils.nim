@@ -15,6 +15,7 @@ export heapqueue
 type
   Compass* = enum North, East, South, West
   Vector* = tuple[x, y: int]
+  Vector3* = tuple[x, y, z: int]
   WeightedEdge*[T] = tuple[elem: T, weight: int]
   WeightedAdjList*[T] = TableRef[T, Table[T, int]]
   ArrayGrid*[a, b: static[int], T] = array[a, array[b, T]]
@@ -62,6 +63,8 @@ func `+`*(a, b: Vector): Vector = (a.x + b.x, a.y + b.y)
 func `-`*(a, b: Vector): Vector = (a.x - b.x, a.y - b.y)
 func `*`*(u: int, v: Vector): Vector = (u * v.x, u * v.y)
 func `/`*(a: Vector, b: int): Vector = (a.x div b, a.y div b)
+
+func `+`*(a, b: Vector3): Vector3 = (a.x + b.x, a.y + b.y, a.z + b.z)
 
 func inc*(a: var Vector, b: Vector) =
   a.x.inc(b.x)
