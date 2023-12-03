@@ -35,7 +35,6 @@ func findDigitStrings(s: string): seq[string] =
 func recoverCalibration2(line: string): Natural =
   let digitStrings = findDigitStrings line
   result = digitStrings[0].str2digit * 10 + digitStrings[^1].str2digit
-  debugEcho line, " ", result
 
 let part2 = input.map(recoverCalibration2).sum
 echo part2
