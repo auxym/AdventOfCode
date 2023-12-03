@@ -41,3 +41,20 @@ let input = parseInput readFile("./input/day02_input.txt")
 
 let pt1 = input.filter(isGamePossible).mapIt(it.id).sum
 echo pt1
+
+# Part 2
+
+func getMinCubeSet(game: GameSamples): CubeSet =
+  for cset in game.samples:
+    if cset.red > result.red:
+      result.red = cset.red
+    if cset.green > result.green:
+      result.green = cset.green
+    if cset.blue > result.blue:
+      result.blue = cset.blue
+
+func power(cset: CubeSet): Natural =
+  cset.red * cset.green * cset.blue
+
+let pt2 = input.map(getMinCubeSet).map(power).sum
+echo pt2
