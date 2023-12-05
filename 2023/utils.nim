@@ -81,12 +81,14 @@ func toVector*(d: Compass): Vector =
   of South: (0, -1)
 
 func getInts*(s: string): seq[int] =
-  const expint = re"-?\d+"
-  result = s.findAndCaptureAll(expint).map(parseInt)
+  const expint = re2"-?\d+"
+  for match in s.findAll(expint):
+    result.add s[match.boundaries].parseInt
 
 func getPositiveInts*(s: string): seq[int] =
-  let expint = re"\d+"
-  result = s.findAndCaptureAll(expint).map(parseInt)
+  let expint = re2"\d+"
+  for match in s.findAll(expint):
+    result.add s[match.boundaries].parseInt
 
 func digits*(i: int): seq[int] =
   result = @[]
