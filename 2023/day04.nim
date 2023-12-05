@@ -1,4 +1,4 @@
-import std/[strutils, sequtils, math, enumerate, intsets]
+import std/[strutils, sequtils, math, intsets, tables]
 
 import utils
 
@@ -38,3 +38,19 @@ let inputCards = readFile("./input/day04_input.txt").parseInput
 
 let pt1 = inputCards.map(scoreCard).sum
 echo pt1
+
+# Part 2
+
+func playGame2(initCards: seq[ScratchCard]): Natural =
+  var cardsCount = newSeqWith(initCards.len + 1, 1)
+  cardsCount[0] = 0
+
+  for card in initCards:
+    let numMatch = (card.haveNums * card.winningNums).card
+    for copyId in (card.id + 1) .. (card.id + numMatch):
+      cardsCount[copyId].inc cardsCount[card.id]
+
+  result = cardsCount.sum
+
+let pt2 = playGame2 inputCards
+echo pt2
