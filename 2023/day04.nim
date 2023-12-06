@@ -1,4 +1,4 @@
-import std/[strutils, sequtils, math, intsets, tables]
+import std/[strutils, sequtils, math, intsets]
 
 import utils
 
