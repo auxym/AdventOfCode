@@ -53,9 +53,39 @@ proc showAlmanac(almanac: Almanac) =
 
 let almanac = readFile("./input/day05_input.txt").parseInput
 
-var pt1 = int.high
-for seed in almanac.seeds:
-  let loc = almanac.lookupSeedLocation seed
-  if loc < pt1: pt1 = loc
+block:
+  var pt1 = int.high
+  for seed in almanac.seeds:
+    let loc = almanac.lookupSeedLocation seed
+    if loc < pt1: pt1 = loc
+  echo pt1
 
-echo pt1
+# Part 2
+
+type Almanac2 = object
+  seeds: seq[Slice[Natural]]
+  maps: seq[AlmanacMap]
+
+func toAlmanac2(alm: Almanac): Almanac2 =
+  for i in countup(alm.seeds.low, alm.seeds.high - 1, 2):
+    result.seeds.add alm.seeds[i] ..< (alm.seeds[i] + alm.seeds[i + 1]).Natural
+  result.maps = alm.maps
+
+func lookupSeedLocation(alm: Almanac2, seed: Natural): Natural =
+  result = seed
+  for map in alm.maps:
+    result = map.lookup result
+
+iterator allSeeds(alm: Almanac2): Natural =
+  for rng in alm.seeds:
+    for e in rng:
+      yield e
+
+let almanac2 = almanac.toAlmanac2
+
+block:
+  var pt2 = int.high
+  for seed in almanac2.allSeeds:
+    let loc = almanac2.lookupSeedLocation seed
+    if loc < pt2: pt2 = loc
+  echo pt2
