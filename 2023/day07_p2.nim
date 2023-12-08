@@ -4,6 +4,7 @@ import std/sequtils
 
 import std/algorithm
 
+import std/tables
 
 type Card = char
 
@@ -22,7 +23,7 @@ type HandKind = enum
   FourOfAKind,
   FiveOfAKind
 
-const CardRanks = "23456789TJQKA"
+const CardRanks = "J23456789TQKA"
 
 func rank(c: Card): Natural =
   let tmp = CardRanks.find(c)
@@ -43,35 +44,30 @@ func parseInput(txt: string): seq[HandEntry] =
     result.add e
 
 func getKind(hand: Hand): HandKind =
-  # Count number of identical cards
-  let sh = hand.sorted
-  var
-    counts: seq[Natural]
-    i = 1
-    cur = 1
-  while i <= sh.high:
-    if sh[i] == sh[i - 1]:
-      inc cur
-    else:
-      counts.add cur
-      cur = 1
-    if i == sh.high:
-      counts.add cur
-    inc i
+  # Get count of each card type, jokers separately
+  var ctab = hand.toCountTable
+  let jokerCount = ctab.getOrDefault('J', 0)
+  ctab.del 'J'
 
+  var counts = toSeq(ctab.values) & @[0, 0]
   counts.sort(Descending)
+
+  # Add jokers to highest count
+  counts[0].inc jokerCount
+
+  let (first, second) = (counts[0], counts[1])
   result =
-    if counts[0] == 5:
+    if first == 5:
       FiveOfAKind
-    elif counts[0] == 4:
+    elif first == 4:
       FourOfAKind
-    elif counts[0] == 3 and counts[1] == 2:
+    elif first == 3 and second == 2:
       FullHouse
-    elif counts[0] == 3:
+    elif first == 3:
       ThreeOfAKind
-    elif counts[0] == 2 and counts[1] == 2:
+    elif first == 2 and second == 2:
       TwoPairs
-    elif counts[0] == 2:
+    elif first == 2:
       OnePair
     else:
       HighCard
@@ -87,10 +83,10 @@ func cmp(a, b: Hand): int =
 
 let input = readFile("input/day07_input.txt").parseInput.sortedByIt(it.hand)
 
-let pt1 = block:
+let ans = block:
   var x = 0
   for (i, ent) in input.pairs:
     x.inc (i + 1) * ent.bid
   x
 
-echo pt1
+echo ans
