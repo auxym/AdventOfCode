@@ -332,6 +332,11 @@ iterator locs*[T](g: SeqGrid[T]): Vector =
     for j in 0..g[i].high:
       yield (j, i)
 
+iterator pairs*[T](g: SeqGrid[T]): (Vector, T) =
+  for i in 0..g.high:
+    for j in 0..g[i].high:
+      yield ((j, i), g[(j, i)])
+
 proc isEdge*(grid: SomeGrid, loc: Vector): bool =
   loc.y == grid.low or
   loc.y == grid.high or
