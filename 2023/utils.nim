@@ -337,6 +337,16 @@ iterator pairs*[T](g: SeqGrid[T]): (Vector, T) =
     for j in 0..g[i].high:
       yield ((j, i), g[(j, i)])
 
+iterator lines*[T](g: SeqGrid[T]): seq[T] =
+  for ln in system.items(g):
+    yield ln
+
+iterator linePairs*[T](g: SeqGrid[T]): (Natural, seq[T]) =
+  var i = 0.Natural
+  for ln in system.items(g):
+    yield (i, ln)
+    inc i
+
 proc isEdge*(grid: SomeGrid, loc: Vector): bool =
   loc.y == grid.low or
   loc.y == grid.high or

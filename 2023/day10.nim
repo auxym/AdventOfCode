@@ -6,6 +6,10 @@ import std/sets
 
 import std/deques
 
+import std/unicode except strip
+
+import std/tables
+
 import utils
 
 type PipeMap = SeqGrid[char]
@@ -13,6 +17,36 @@ type PipeMap = SeqGrid[char]
 func parseInput(txt: string): PipeMap =
   for line in txt.strip.splitLines:
     result.add toSeq(line)
+
+
+iterator connectingPipes(grid: PipeMap, frm: Vector): Vector =
+  let
+    frmVal = grid[frm]
+    left = (frm.x - 1, frm.y)
+    right = (frm.x + 1, frm.y)
+    above = (frm.x, frm.y - 1)
+    below = (frm.x, frm.y + 1)
+
+  if grid.isInside(left) and
+  grid[left] in {'-', 'F', 'L'} and
+  frmVal in {'S', '-', 'J', '7'}:
+    yield left
+
+  if grid.isInside(right) and
+  grid[right] in {'-', 'J', '7'} and
+  frmVal in {'S', '-', 'F', 'L'}:
+    yield right
+
+  if grid.isInside(above) and
+  grid[above] in {'|', 'F', '7'} and
+  frmVal in {'S', '|', 'J', 'L'}:
+    yield above
+
+  if grid.isInside(below) and
+  grid[below] in {'|', 'J', 'L'} and
+  frmVal in {'S', '|', 'F', '7'}:
+    yield below
+
 
 iterator traverseBfs(grid: PipeMap, start: Vector): (Vector, int) =
   var
@@ -26,40 +60,11 @@ iterator traverseBfs(grid: PipeMap, start: Vector): (Vector, int) =
     let (cur, steps) = q.popLast
     yield (cur, steps)
 
-    let
-      curVal = grid[cur]
-      left = (cur.x - 1, cur.y)
-      right = (cur.x + 1, cur.y)
-      above = (cur.x, cur.y - 1)
-      below = (cur.x, cur.y + 1)
+    for v in grid.connectingPipes(cur):
+      if v notin seen:
+        seen.incl v
+        q.addFirst (v, steps + 1)
 
-    if left notin seen and
-    grid.isInside(left) and
-    grid[left] in {'-', 'F', 'L'} and
-    curVal in {'S', '-', 'J', '7'}:
-      q.addFirst (left, steps + 1)
-      seen.incl left
-
-    if right notin seen and
-    grid.isInside(right) and
-    grid[right] in {'-', 'J', '7'} and
-    curVal in {'S', '-', 'F', 'L'}:
-      q.addFirst (right, steps + 1)
-      seen.incl right
-
-    if above notin seen and
-    grid.isInside(above) and
-    grid[above] in {'|', 'F', '7'} and
-    curVal in {'S', '|', 'J', 'L'}:
-      q.addFirst (above, steps + 1)
-      seen.incl above
-
-    if below notin seen and
-    grid.isInside(below) and
-    grid[below] in {'|', 'J', 'L'} and
-    curVal in {'S', '|', 'F', '7'}:
-      q.addFirst (below, steps + 1)
-      seen.incl below
 
 func findStart(grid: PipeMap): Vector =
   for (v, tile) in grid.pairs:
@@ -78,3 +83,92 @@ let pt1 = block:
   maxSteps
 
 echo pt1
+
+
+# Part 2
+
+proc showUnicode(grid: PipeMap) =
+  const charmap = {
+    '-': "─",
+    '|': "│",
+    'J': "╯",
+    'L': "╰",
+    'F': "╭",
+    '7': "╮",
+    '.': " ",
+  }.toTable
+  for line in grid:
+    echo line.mapIt(charmap.getOrDefault(it, $it)).join
+
+func isolateLoop(grid: PipeMap): PipeMap =
+  # Replace all tiles not part of the loop with ground
+  result = grid
+
+  let start = grid.findStart
+  let loopSet = block:
+    var s: HashSet[Vector]
+    for (v, _) in grid.traverseBfs(start):
+      s.incl v
+    s
+
+  for v in result.locs:
+    if v notin loopSet:
+      result[v] = '.'
+
+
+func replaceStart(grid: PipeMap): PipeMap =
+  result = grid
+  let start = grid.findStart
+  let connSet = toSeq(grid.connectingPipes(start)).mapIt(it - start).toHashSet
+  assert connSet.card == 2
+  result[start] =
+    if connset == [(1, 0), (-1, 0)].toHashSet: '-'
+    elif connset == [(0, 1), (0, -1)].toHashSet: '|'
+    elif connset == [(0, -1), (-1, 0)].toHashSet: 'J'
+    elif connset == [(0, -1), (1, 0)].toHashSet: 'L'
+    elif connset == [(0, 1), (-1, 0)].toHashSet: '7'
+    elif connset == [(0, 1), (1, 0)].toHashSet: 'F'
+    else:
+      debugEcho connSet
+      assert false
+      '.'
+
+
+type LineStateMachine = object
+  inside: bool
+  prevBend: char
+
+
+func toggle(sm: var LineStateMachine) = sm.inside = not sm.inside
+
+
+func findInside(grid: PipeMap): seq[Vector] =
+  let cleanGrid = grid.isolateLoop.replaceStart
+  for y, line in cleanGrid.linePairs:
+    var sm: LineStateMachine
+    for x, tile in line.pairs:
+      if tile == '.':
+        if sm.inside: result.add (x, y)
+      elif tile == '|':
+        toggle sm
+      elif sm.prevBend == '\0':
+        if tile in {'F', 'L'}:
+          sm.prevBend = tile
+      elif sm.prevBend == 'F':
+        if tile notin {'-', 'J', '7'}:
+          debugEcho (x, y)
+        assert tile in {'-', 'J', '7'}
+        if tile in {'J', '7'}:
+          sm.prevBend = '\0'
+        if tile == 'J':
+          toggle sm
+      elif sm.prevBend == 'L':
+        assert tile in {'-', '7', 'J'}
+        if tile in {'J', '7'}:
+          sm.prevBend = '\0'
+        if tile == '7':
+          toggle sm
+
+
+let pt2 = input.findInside.len
+echo pt2
