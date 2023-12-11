@@ -6,8 +6,6 @@ import std/sets
 
 import std/deques
 
-import std/unicode except strip
-
 import std/tables
 
 import utils
@@ -142,32 +140,34 @@ type LineStateMachine = object
 func toggle(sm: var LineStateMachine) = sm.inside = not sm.inside
 
 
+func feed(sm: var LineStateMachine, cr: char) =
+  if cr == '|':
+    toggle sm
+  elif sm.prevBend == '\0':
+    if cr in {'F', 'L'}:
+      sm.prevBend = cr
+  elif sm.prevBend == 'F':
+    assert cr in {'-', 'J', '7'}
+    if cr in {'J', '7'}:
+      sm.prevBend = '\0'
+    if cr == 'J':
+      toggle sm
+  elif sm.prevBend == 'L':
+    assert cr in {'-', '7', 'J'}
+    if cr in {'J', '7'}:
+      sm.prevBend = '\0'
+    if cr == '7':
+      toggle sm
+
+
 func findInside(grid: PipeMap): seq[Vector] =
   let cleanGrid = grid.isolateLoop.replaceStart
   for y, line in cleanGrid.linePairs:
     var sm: LineStateMachine
     for x, tile in line.pairs:
-      if tile == '.':
-        if sm.inside: result.add (x, y)
-      elif tile == '|':
-        toggle sm
-      elif sm.prevBend == '\0':
-        if tile in {'F', 'L'}:
-          sm.prevBend = tile
-      elif sm.prevBend == 'F':
-        if tile notin {'-', 'J', '7'}:
-          debugEcho (x, y)
-        assert tile in {'-', 'J', '7'}
-        if tile in {'J', '7'}:
-          sm.prevBend = '\0'
-        if tile == 'J':
-          toggle sm
-      elif sm.prevBend == 'L':
-        assert tile in {'-', '7', 'J'}
-        if tile in {'J', '7'}:
-          sm.prevBend = '\0'
-        if tile == '7':
-          toggle sm
+      sm.feed tile
+      if tile == '.' and sm.inside:
+        result.add (x, y)
 
 
 let pt2 = input.findInside.len
