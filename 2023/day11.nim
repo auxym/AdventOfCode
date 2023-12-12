@@ -18,21 +18,22 @@ func parseInput(txt: string): GalaxiesMap =
       if c == '#':
         result.add (x, y)
 
-func insertColumn(map: var GalaxiesMap, after: Natural) =
+func insertColumn(map: var GalaxiesMap, after: Natural, n: Positive = 1) =
   for gal in map.mitems:
     if gal.x > after:
-      inc gal.x
+      gal.x.inc n
 
-func insertRow(map: var GalaxiesMap, after: Natural) =
+func insertRow(map: var GalaxiesMap, after: Natural, n: Positive = 1) =
   for gal in map.mitems:
     if gal.y > after:
-      inc gal.y
+      gal.y.inc n
 
-func incAfter[T](arr: var openArray[T], after: int) =
+func incAfter[T](arr: var openArray[T], after: int, n: T = 1) =
   for i in (after + 1) .. arr.high:
-    inc arr[i]
+    arr[i].inc n
 
-func expand(map: GalaxiesMap): GalaxiesMap =
+func expand(map: GalaxiesMap, k: Positive = 2): GalaxiesMap =
+  let n = k - 1
   var
     highX, highY = int.low
     rowSet, colSet: IntSet
@@ -48,18 +49,26 @@ func expand(map: GalaxiesMap): GalaxiesMap =
 
   result = map
   for icol in emptyCols.low .. emptyCols.high:
-    result.insertColumn(after=emptyCols[icol])
-    emptyCols.incAfter icol
+    result.insertColumn(after=emptyCols[icol], n=n)
+    emptyCols.incAfter(icol, n)
   for irow in emptyRows.low .. emptyRows.high:
-    result.insertRow(after=emptyRows[irow])
-    emptyrows.incAfter irow
+    result.insertRow(after=emptyRows[irow], n=n)
+    emptyrows.incAfter(irow, n)
 
 let input = readFile("input/day11_input.txt").parseInput
 
 let pt1 = block:
   var sd = 0
-  for pair in combinations(input.expand, 2):
+  for pair in combinations(input.expand(2), 2):
     sd.inc manhattan(pair[0], pair[1])
   sd
 
 echo pt1
+
+let pt2 = block:
+  var sd = 0
+  for pair in combinations(input.expand(1_000_000), 2):
+    sd.inc manhattan(pair[0], pair[1])
+  sd
+
+echo pt2
