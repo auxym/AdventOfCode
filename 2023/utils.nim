@@ -85,7 +85,7 @@ func getInts*(s: string): seq[int] =
   for match in s.findAll(expint):
     result.add s[match.boundaries].parseInt
 
-func getPositiveInts*(s: string): seq[int] =
+func getNaturalInts*(s: string): seq[Natural] =
   let expint = re2"\d+"
   for match in s.findAll(expint):
     result.add s[match.boundaries].parseInt
