@@ -20,42 +20,24 @@ func parseInput(txt: string): Input =
 #let input = readFile("input/day12_example.txt").parseInput
 let input = readFile("input/day12_input.txt").parseInput
 
-func check(rec: ConditionRecord): bool =
-  type RlState = enum
-    Ground
-    Spring
+func check2(rec: ConditionRecord): bool =
+  var i = 0
 
-  result = true
-  var
-    rl = 0
-    cksumIndex = -1
-    state = Ground
-  for c in rec.row & '.':
-    case state
-    of Ground:
-      if c == '#':
-        state = Spring
-        rl = 1
-        inc cksumIndex
-        #debugEcho "Transition spring cki=", cksumIndex
-        if cksumIndex > rec.checksum.high:
-          return false
-      elif c == '?':
-        return true
-    of Spring:
-      if c == '#':
-        rl.inc
-        if rl > rec.checksum[cksumIndex]:
-          return false
-      elif c == '?':
-        return true
-      elif c == '.':
-        if rl != rec.checksum[cksumIndex]:
-          return false
-        state = Ground
+  for rl in rec.checksum:
+    var cur = 0
+    while i <= rec.row.high and rec.row[i] == '.':
+      inc i
+    while i <= rec.row.high and rec.row[i] == '#':
+      inc cur
+      inc i
+    if i <= rec.row.high and rec.row[i] == '?':
+      return true
+    if cur != rl:
+      return false
 
-  # Ensure we have checked all runlengths
-  result = cksumIndex == rec.checksum.high
+  while i <= rec.row.high and rec.row[i] in {'.', '?'}:
+    inc i
+  result = i == rec.row.len
 
 func isComplete(rec: ConditionRecord): bool =
   '?' notin rec.row
@@ -68,7 +50,6 @@ func repair(rec: ConditionRecord): seq[ConditionRecord] =
     let cur = stack.pop
     if isComplete cur:
       result.add cur
-      #debugEcho cur
       continue
 
     let firstUnknown = cur.row.find '?'
@@ -76,16 +57,14 @@ func repair(rec: ConditionRecord): seq[ConditionRecord] =
     for alt in ['.', '#']:
       var guess = cur
       guess.row[firstUnknown] = alt
-      if check(guess):
+      if check2(guess):
         stack.add guess
 
-let pt1 = block:
-  var x = 0
-  for rec in input:
-    x.inc rec.repair.len
-  x
+let pt1 =
+  block:
+    var x = 0
+    for rec in input:
+      x.inc rec.repair.len
+    x
 
 echo pt1
-
-#const a = ConditionRecord(row: "#.#.###", checksum: @[1, 1, 3])
-#echo check(a)
