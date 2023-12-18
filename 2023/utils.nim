@@ -347,6 +347,10 @@ iterator linePairs*[T](g: SeqGrid[T]): (Natural, seq[T]) =
     yield (i, ln)
     inc i
 
+func columns*[T; U, V: Ordinal](g: SeqGrid[T]; x: HSlice[U, V]): SeqGrid[T] =
+  for row in g:
+    result.add row[x]
+
 proc isEdge*(grid: SomeGrid, loc: Vector): bool =
   loc.y == grid.low or
   loc.y == grid.high or
