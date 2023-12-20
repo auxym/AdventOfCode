@@ -75,10 +75,10 @@ func manhattan*(a, b: Vector): Natural =
 
 func toVector*(d: Compass): Vector =
   case d
-  of North: (0, 1)
+  of North: (0, -1)
   of East: (1, 0)
   of West: (-1, 0)
-  of South: (0, -1)
+  of South: (0, 1)
 
 func getInts*(s: string): seq[int] =
   const expint = re2"-?\d+"
@@ -350,6 +350,12 @@ iterator linePairs*[T](g: SeqGrid[T]): (Natural, seq[T]) =
 func columns*[T; U, V: Ordinal](g: SeqGrid[T]; x: HSlice[U, V]): SeqGrid[T] =
   for row in g:
     result.add row[x]
+
+func nrows*(g: SeqGrid): Natural =
+  g.len
+
+func ncolumns*(g: SeqGrid): Natural =
+  g[0].len
 
 proc isEdge*(grid: SomeGrid, loc: Vector): bool =
   loc.y == grid.low or
