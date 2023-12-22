@@ -59,6 +59,14 @@ func cw*(v: Vector): Vector = # Rotate 90 degrees clockwise
 func ccw*(v: Vector): Vector = # Rotate 90 degrees counter-clockwise
   (-v.y, v.x)
 
+func cw2*(v: Vector): Vector =
+  ## Rotate 90 deg clockwise. y is positive downwards
+  (-v.y, v.x)
+
+func ccw2*(v: Vector): Vector =
+  ## Rotate 90 deg clockwise. y is positive downwards
+  (v.y, -v.x)
+
 func `+`*(a, b: Vector): Vector = (a.x + b.x, a.y + b.y)
 func `-`*(a, b: Vector): Vector = (a.x - b.x, a.y - b.y)
 func `*`*(u: int, v: Vector): Vector = (u * v.x, u * v.y)
@@ -72,6 +80,15 @@ func inc*(a: var Vector, b: Vector) =
 
 func manhattan*(a, b: Vector): Natural =
   abs(b.x - a.x) + abs(b.y - a.y)
+
+func dot*(a, b: Vector): int =
+  a.x * b.x + a.y  * b.y
+
+func isHorizontal*(v: Vector): bool =
+  v.y == 0
+
+func isVertical*(v: Vector): bool =
+  v.x == 0
 
 func toVector*(d: Compass): Vector =
   case d
