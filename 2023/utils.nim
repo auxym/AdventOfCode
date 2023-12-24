@@ -69,6 +69,7 @@ func ccw2*(v: Vector): Vector =
 
 func `+`*(a, b: Vector): Vector = (a.x + b.x, a.y + b.y)
 func `-`*(a, b: Vector): Vector = (a.x - b.x, a.y - b.y)
+func `-`*(a: Vector): Vector = (-a.x, -a.y)
 func `*`*(u: int, v: Vector): Vector = (u * v.x, u * v.y)
 func `/`*(a: Vector, b: int): Vector = (a.x div b, a.y div b)
 
