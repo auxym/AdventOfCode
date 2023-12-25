@@ -21,13 +21,6 @@ func parseInput(txt: string): HeatLossMap =
 
 #let input = readFile("input/day17_example.txt").parseInput
 let input = readFile("input/day17_input.txt").parseInput
-# let input = """
-# 111111111111
-# 999999999991
-# 999999999991
-# 999999999991
-# 999999999991
-# """.parseInput
 
 func countDirection(path: Path): (Vector, Natural) =
   if path.steps.len < 2:
@@ -57,11 +50,16 @@ func validSteps(map: HeatLossMap; path: Path): seq[Vector] =
 func `<`(a, b: Path): bool =
   a.totalHeatLoss < b.totalHeatLoss
 
-type PathState = array[4, Vector]
+type PathState = object
+  loc: Vector
+  dir: Vector
+  dirCount: Natural
 
 func getState(path: Path): PathState =
-  for i in 0..min(3, path.steps.high):
-    result[result.high - i] = path.steps[path.steps.high - i]
+  let (dir, dirCount) = countDirection(path)
+  result.loc = path.steps[^1]
+  result.dir = dir
+  result.dirCount = dirCount
 
 func findBestPath(map: HeatLossMap; start, to: Vector): Path =
   ## Dijkstra
@@ -98,7 +96,6 @@ func validSteps2(map: HeatLossMap; path: Path): seq[Vector] =
   let
     (dir, dirCount) = countDirection(path)
     cur = path.steps[^1]
-  #debugEcho "Dir: ", dir, " Count: ", dirCount
   for v in map.neighbors(cur):
     let
       sameDir = (v - cur) == dir
@@ -113,27 +110,15 @@ func validSteps2(map: HeatLossMap; path: Path): seq[Vector] =
       else:
         result.add v
 
-type PathState2 = object
-  loc: Vector
-  dir: Vector
-  dirCount: Natural
-
-func getState2(path: Path): PathState2 =
-  let (dir, dirCount) = countDirection(path)
-  result.loc = path.steps[^1]
-  result.dir = dir
-  result.dirCount = dirCount
-
 func findBestPath2(map: HeatLossMap; start, to: Vector): Path =
   result.totalHeatLoss = int.high
   var
     q = initHeapQueue[Path]()
-    heatLoss: Table[PathState2, Natural]
+    heatLoss: Table[PathState, Natural]
   q.push Path(steps: @[start], totalHeatLoss: 0)
 
   while q.len > 0:
     let cur = q.pop
-    #debugEcho "\n", cur.steps[^1], " ", cur.totalHeatLoss
     if cur.steps[^1] == to:
       let (_, dirCount) = countDirection(cur)
       if dirCount >= 4 and dirCount <= 10:
@@ -142,15 +127,11 @@ func findBestPath2(map: HeatLossMap; start, to: Vector): Path =
       let
         tentative = cur.totalHeatLoss + map[next]
         tPath = Path(steps: cur.steps & next, totalHeatLoss: tentative)
-        state = tPath.getState2
-      #debugEcho "  tentative: ", next, " ", tentative
+        state = tPath.getState
       if tentative < heatLoss.getOrDefault(state, int.high):
         heatLoss[state] = tentative
-        #debugEcho "  push"
         q.push tPath
 
 let pt2Path = input.findBestPath2(start, dest)
 
-#echo ""
-#echo pt2Path.steps.mapIt($it).join("\n")
 echo pt2Path.totalHeatLoss
