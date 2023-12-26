@@ -93,6 +93,14 @@ func isVertical*(v: Vector): bool =
 
 func toVector*(d: Compass): Vector =
   case d
+  of North: (0, 1)
+  of East: (1, 0)
+  of West: (-1, 0)
+  of South: (0, -1)
+
+func toVector2*(d: Compass): Vector =
+  ## Y axis positive downwards
+  case d
   of North: (0, -1)
   of East: (1, 0)
   of West: (-1, 0)

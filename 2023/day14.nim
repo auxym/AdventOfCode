@@ -15,7 +15,7 @@ let input = readFile("input/day14_input.txt").parseInput
 
 func roll(map: var PlatformMap; loc: Vector; dir: Compass) =
   assert map[loc] == 'O'
-  let u = dir.toVector
+  let u = dir.toVector2
   var
     newLoc = loc
     next = loc + u
