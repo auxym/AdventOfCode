@@ -21,6 +21,7 @@ type
   ArrayGrid*[a, b: static[int], T] = array[a, array[b, T]]
   SeqGrid*[T] = seq[seq[T]]
   SomeGrid* = ArrayGrid | SeqGrid
+  TableGrid*[T] = Table[Vector, T]
 
 type PriorityQueueElem*[T] = object
   prio: int
@@ -73,11 +74,19 @@ func `-`*(a: Vector): Vector = (-a.x, -a.y)
 func `*`*(u: int, v: Vector): Vector = (u * v.x, u * v.y)
 func `/`*(a: Vector, b: int): Vector = (a.x div b, a.y div b)
 
+template `*`*(v: Vector, u: int): Vector = u * v
+
 func `+`*(a, b: Vector3): Vector3 = (a.x + b.x, a.y + b.y, a.z + b.z)
 
 func inc*(a: var Vector, b: Vector) =
   a.x.inc(b.x)
   a.y.inc(b.y)
+
+func above*(v: Vector): Vector =
+  v + (0, 1)
+
+func below*(v: Vector): Vector =
+  v + (0, -1)
 
 func manhattan*(a, b: Vector): Natural =
   abs(b.x - a.x) + abs(b.y - a.y)
@@ -399,3 +408,33 @@ iterator groups*[T](s: openArray[T], n: Natural): seq[T] =
   for i in countup(0, s.high, n):
     let stop = min((i + n - 1), s.high)
     yield s[i .. stop]
+
+func getBoundingBox*[T](h: TableGrid[T]): (Vector, Vector) =
+  var
+    upperLeft: Vector = (int.high, int.high)
+    lowerRight: Vector = (int.low, int.low)
+  for v in h.keys:
+    if v.x < upperLeft.x:
+      upperLeft.x = v.x
+    if v.y < upperLeft.y:
+      upperLeft.y = v.y
+    if v.x > lowerRight.x:
+      lowerRight.x = v.x
+    if v.y > lowerRight.y:
+      lowerRight.y = v.y
+  result = (upperLeft, lowerRight)
+
+func getBoundingBox*(vset: HashSet[Vector]): (Vector, Vector) =
+  var
+    upperLeft: Vector = (int.high, int.high)
+    lowerRight: Vector = (int.low, int.low)
+  for v in vset:
+    if v.x < upperLeft.x:
+      upperLeft.x = v.x
+    if v.y < upperLeft.y:
+      upperLeft.y = v.y
+    if v.x > lowerRight.x:
+      lowerRight.x = v.x
+    if v.y > lowerRight.y:
+      lowerRight.y = v.y
+  result = (upperLeft, lowerRight)
