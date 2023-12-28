@@ -1,12 +1,10 @@
 import std/strutils
 
-import std/algorithm
+import std/sequtils
 
 import std/strscans
 
 import std/sets
-
-import std/options
 
 import utils
 
@@ -19,8 +17,6 @@ type
     color: Color
 
   DigPlan = seq[DigPlanInstruction]
-
-  LineSegment = tuple[a, b: Vector]
 
 func parseInput(txt: string): DigPlan =
   for line in txt.strip.splitLines:
@@ -69,68 +65,46 @@ func toLines(plan: DigPlan): seq[LineSegment] =
     cur = next
   assert cur == (0, 0)
 
-func isHorizontal(line: LineSegment): bool =
-  line.a.y == line.b.y
+func shoelace(segs: seq[LineSegment]): int =
+  for i, line in segs.pairs:
+    result.inc line.a.x * line.b.y - line.b.x * line.a.y
+  result = abs(result) div 2
 
-func isVertical(line: LineSegment): bool =
-  line.a.x == line.b.x
+func edgeArea(segs: seq[LineSegment]): int =
+  let numVertices = segs.len
+  assert (numVertices - 4) mod 2 == 0
 
-func rayIntersect(line: LineSegment; y: int): Option[int] =
-  ## Intersection of horizontal ray at height y with vertical line
-  let yrange = min(line.a.y, line.b.y)..<max(line.a.y, line.b.y)
-  if line.isVertical and y in yrange:
-    return some(line.a.x)
-
-func rayIntersect(lines: openArray[LineSegment]; y: int): seq[int] =
-  for ln in lines:
-    let xi = ln.rayIntersect(y)
-    if xi.isSome:
-      result.add xi.get
-  sort result
-
-func getBoundingBox(lines: openArray[LineSegment]): (Vector, Vector) =
-  var
-    upperLeft: Vector = (int.high, int.high)
-    lowerRight: Vector = (int.low, int.low)
-  for ln in lines:
-    for v in [ln.a, ln.b]:
-      if v.x < upperLeft.x:
-        upperLeft.x = v.x
-      if v.y < upperLeft.y:
-        upperLeft.y = v.y
-      if v.x > lowerRight.x:
-        lowerRight.x = v.x
-      if v.y > lowerRight.y:
-        lowerRight.y = v.y
-  result = (upperLeft, lowerRight)
-
-func rasterizeEdges(lines: openArray[LineSegment]): HashSet[Vector] =
-  for ln in lines:
-    if ln.isVertical:
-      let x = ln.a.x
-      for y in min(ln.a.y, ln.b.y)..max(ln.a.y, ln.b.y):
-        result.incl (x, y)
-    elif ln.isHorizontal:
-      let y = ln.a.y
-      for x in min(ln.a.x, ln.b.x)..max(ln.a.x, ln.b.x):
-        result.incl (x, y)
-
-func rasterize(plan: DigPlan): HashSet[Vector] =
   let
-    lines = plan.toLines
-    corners = lines.getBoundingBox
+    numInside = (numVertices - 4) div 2
+    numOutside = numInside + 4
+  assert numInside + numOutside == numVertices
 
-  result = lines.rasterizeEdges
+  for line in segs:
+    result.inc manhattan(line.a, line.b) - 1
 
-  for y in corners[0].y..corners[1].y:
-    let intersections = lines.rayIntersect(y)
-    assert intersections.len mod 2 == 0
+  assert result mod 2 == 0
+  result = result div 2
 
-    for i in countup(intersections.low, intersections.high, 2):
-      for x in intersections[i]..intersections[i + 1]:
-        result.incl (x, y)
+  assert (numInside + numOutside * 3) mod 4 == 0
+  result.inc (numInside + numOutside * 3) div 4
 
-writeFile("lagoon.txt", input.toLines.rasterizeEdges.show)
+func lagoonArea(plan: DigPlan): int =
+  let poly = plan.toLines
+  result = shoelace(poly) + edgeArea(poly)
 
-let pt1 = input.rasterize.card
+let pt1 = lagoonArea(input)
 echo pt1
+
+# Part 2
+
+func convertP2(ins: DigPlanInstruction): DigPlanInstruction =
+  result.count = ins.color shr 4
+
+  let dirCode = ins.color and 0x00000F
+  doAssert dirCode <= 3
+  result.dir = [East, South, West, North][dirCode]
+
+let plan2 = input.map(convertP2)
+let pt2 = lagoonArea plan2
+
+echo pt2

@@ -16,6 +16,7 @@ type
   Compass* = enum North, East, South, West
   Vector* = tuple[x, y: int]
   Vector3* = tuple[x, y, z: int]
+  LineSegment* = tuple[a, b: Vector]
   WeightedEdge*[T] = tuple[elem: T, weight: int]
   WeightedAdjList*[T] = TableRef[T, Table[T, int]]
   ArrayGrid*[a, b: static[int], T] = array[a, array[b, T]]
@@ -438,3 +439,9 @@ func getBoundingBox*(vset: HashSet[Vector]): (Vector, Vector) =
     if v.y > lowerRight.y:
       lowerRight.y = v.y
   result = (upperLeft, lowerRight)
+
+func isHorizontal*(line: LineSegment): bool =
+  line.a.y == line.b.y
+
+func isVertical*(line: LineSegment): bool =
+  line.a.x == line.b.x
