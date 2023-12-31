@@ -8,8 +8,6 @@ import std/math
 
 import regex
 
-#import utils
-
 type
   Category = enum
     catX
@@ -156,21 +154,33 @@ func split(extents: HCube; rule: Rule): (HCube, HCube) =
 func countAccepted(
     wftab: Table[string, Workflow]; wfid: string; ruleIdx: Natural; extents: HCube
 ): Natural =
-  result =
+  let fullExtents =
+    block:
+      var c: HCube
+      for dim in c.mitems:
+        dim = 1..4000
+      c
+
+  var stack: seq[(string, int, HCube)]
+  stack.add ("in", 0, fullExtents)
+
+  while stack.len > 0:
+    let (wfid, ruleIdx, extents) = stack.pop
+
     if wfid == "A":
-      extents.volume
+      result.inc extents.volume
     elif wfid == "R":
-      0
+      discard
     else:
       let
         wf = wftab[wfid]
         rule = wf.rules[ruleIdx]
       if rule.op == opNone:
-        countAccepted(wftab, rule.truewf, 0, extents)
+        stack.add (rule.truewf, 0, extents)
       else:
         let (left, right) = extents.split(rule)
-        countAccepted(wftab, rule.truewf, 0, left) +
-          countAccepted(wftab, wfid, ruleIdx + 1, right)
+        stack.add (rule.truewf, 0, left)
+        stack.add (wfid, ruleIdx + 1, right)
 
 func countAccepted(input: Input): Natural =
   let extents =
