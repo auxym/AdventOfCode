@@ -131,88 +131,8 @@ let pt1 = input.parts.filterIt(input.workflows.process(it)).mapIt(sum it).sum
 echo pt1
 
 # Part 2
+# Based on reddit post:
 # https://www.reddit.com/r/adventofcode/comments/18lwcw2/2023_day_19_an_equivalent_part_2_example_spoilers/
-
-type
-  BinaryRule = object
-    id: string
-    dim: Category
-    leftLessThan: int
-    left, right: string
-
-  KdNodeKind = enum
-    kdBranch
-    kdLeaf
-
-  KdNode = ref object
-    case kind: KdNodeKind
-    of kdBranch:
-      dim: Category
-      val: int
-      left, right: KdNode
-    of kdLeaf:
-      accepted: bool
-
-func toBinRuleId(id: string): string =
-  if id == "A" or id == "R":
-    id
-  else:
-    id & "0"
-
-func toBinaryRules(tab: Table[string, Workflow]): Table[string, BinaryRule] =
-  for wf in tab.values:
-    assert wf.rules[^1].op == opNone
-    for i in wf.rules.low..<wf.rules.high:
-      let rule = wf.rules[i]
-      var binRule = BinaryRule(id: wf.id & $i, dim: rule.lhs)
-
-      let alt =
-        if (i + 1) == wf.rules.high:
-          wf.rules[^1].truewf.toBinRuleId
-        else:
-          wf.id & $(i + 1)
-
-      case rule.op
-      of opLessThan:
-        binRule.leftLessThan = rule.rhs
-        binRule.left = rule.truewf.toBinRuleId
-        binRule.right = alt
-      of opGreaterThan:
-        binRule.leftLessThan = rule.rhs + 1
-        binRule.right = rule.truewf.toBinRuleId
-        binRule.left = alt
-      of opNone:
-        assert false
-
-      assert binRule.id notin result
-      result[binRule.id] = binRule
-
-func buildTree(tab: Table[string, BinaryRule]; rootId: string): KdNode =
-  debugEcho rootId
-  let rule = tab[rootId]
-
-  new result
-  result.kind = kdBranch
-  result.dim = rule.dim
-  result.val = rule.leftLessThan
-
-  if rule.left == "A":
-    result.left = KdNode(kind: kdLeaf, accepted: true)
-  elif rule.left == "R":
-    result.left = KdNode(kind: kdLeaf, accepted: false)
-  else:
-    result.left = buildTree(tab, rule.left)
-
-  if rule.right == "A":
-    result.right = KdNode(kind: kdLeaf, accepted: true)
-  elif rule.right == "R":
-    result.right = KdNode(kind: kdLeaf, accepted: false)
-  else:
-    result.right = buildTree(tab, rule.right)
-
-func buildTree(input: Input): KdNode =
-  let rules = input.workflows.toBinaryRules
-  result = rules.buildTree("in0")
 
 type HCube = array[Category, Slice[int]]
 
@@ -221,34 +141,46 @@ func volume(cube: HCube): Natural =
   for dim in cube.items:
     result = result * dim.len
 
-func countAccepted(tree: KdNode; extents: HCube): Natural =
-  case tree.kind
-  of kdLeaf:
-    if tree.accepted:
+func split(extents: HCube; rule: Rule): (HCube, HCube) =
+  result = (extents, extents)
+  case rule.op
+  of opLessThan:
+    result[0][rule.lhs].b = rule.rhs - 1
+    result[1][rule.lhs].a = rule.rhs
+  of opGreaterThan:
+    result[0][rule.lhs].a = rule.rhs + 1
+    result[1][rule.lhs].b = rule.rhs
+  of opNone:
+    doAssert false
+
+func countAccepted(
+    wftab: Table[string, Workflow]; wfid: string; ruleIdx: Natural; extents: HCube
+): Natural =
+  result =
+    if wfid == "A":
       extents.volume
-    else:
+    elif wfid == "R":
       0
-  of kdBranch:
-    debugEcho extents, " split on ", tree.dim, " = ", tree.val
-    var leftCube = extents
-    leftCube[tree.dim].b = tree.val - 1
-    assert leftCube[tree.dim].b >= leftCube[tree.dim].a
+    else:
+      let
+        wf = wftab[wfid]
+        rule = wf.rules[ruleIdx]
+      if rule.op == opNone:
+        countAccepted(wftab, rule.truewf, 0, extents)
+      else:
+        let (left, right) = extents.split(rule)
+        countAccepted(wftab, rule.truewf, 0, left) +
+          countAccepted(wftab, wfid, ruleIdx + 1, right)
 
-    var rightCube = extents
-    rightCube[tree.dim].a = tree.val
-    assert rightCube[tree.dim].b >= rightCube[tree.dim].a
-
-    countAccepted(tree.left, leftCube) + countAccepted(tree.right, rightCube)
-
-func countAccepted(tree: KdNode): Natural =
+func countAccepted(input: Input): Natural =
   let extents =
     block:
       var c: HCube
       for dim in c.mitems:
         dim = 1..4000
       c
-  result = countAccepted(tree, extents)
+  result = countAccepted(input.workflows, "in", 0, extents)
 
-let kdtree = input.buildTree
-let pt2 = kdtree.countAccepted
+let pt2 = countAccepted(input)
 echo pt2
+assert pt2 == 124167549767307
