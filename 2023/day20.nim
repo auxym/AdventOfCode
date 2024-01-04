@@ -92,19 +92,22 @@ func parseInput(txt: string): MachineState =
     else:
       doAssert false
 
-let input = readFile("input/day20_example.txt").parseInput
+#let input = readFile("input/day20_example.txt").parseInput
+let input = readFile("input/day20_input.txt").parseInput
 
 proc pushPulse(machine: var MachineState; p: bool; src, dest: ModuleId) =
+  #debugEcho src, " -", ["low", "high"][p.int], " -> ", dest
   machine.pulseQueue.addLast Pulse(p: p, src: src, dest: dest)
 
 proc pushPulse(
     machine: var MachineState; p: bool; src: ModuleId; dest: openArray[ModuleId]
 ) =
   for d in dest:
-    machine.pulseQueue.addLast Pulse(p: p, src: src, dest: d)
+    machine.pushPulse(p, src, d)
 
 proc pushButton(machine: var MachineState) =
   doAssert machine.pulseQueue.len == 0
+  inc machine.pulseCount[Low]
   for dst in machine.broadcastTargets:
     machine.pushPulse(Low, "broadcaster", dst)
 
@@ -145,6 +148,7 @@ let pt1 =
     for i in 1..1000:
       m.pushButton
       m.processAllPulses
+      #debugEcho ""
     debugEcho m.pulseCount
     m.pulseCount[High] * m.pulseCount[Low]
 
