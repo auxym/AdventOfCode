@@ -70,7 +70,6 @@ func parseInput(txt: string): MachineState =
 
     processedLines.add (src, dests)
 
-  result.addModule("output", mOutput)
   for (src, dests) in processedLines:
     if src == "broadcaster":
       result.broadcastTargets = dests
@@ -88,6 +87,9 @@ func parseInput(txt: string): MachineState =
       discard
     elif src[0] in {'%', '&'}:
       for dst in dests:
+        if dst notin result.moduleKinds:
+          # Handle output module
+          result.addModule(dst, mOutput)
         result.addWire(src[1..^1], dst)
     else:
       doAssert false
