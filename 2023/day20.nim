@@ -22,11 +22,12 @@ type
   MachineState = object
     broadcastTargets: seq[ModuleId]
     moduleKinds: Table[ModuleId, ModuleKind]
-    conjunctionState: Table[ModuleId, TableRef[ModuleId, bool]]
+    conjunctionState: Table[ModuleId, OrderedTableRef[ModuleId, bool]]
     flipflopState: Table[ModuleId, bool]
     wires: Table[ModuleId, seq[ModuleId]]
     pulseQueue: Deque[Pulse]
     pulseCount: array[bool, Natural]
+    rx: bool
 
 const
   Low = false
@@ -46,7 +47,7 @@ proc addModule(machine: var MachineState; modl: ModuleId; kind: ModuleKind) =
   of mFlipFlop:
     machine.flipflopState[modl] = Low
   of mConjunction:
-    machine.conjunctionState[modl] = newTable[ModuleId, bool]()
+    machine.conjunctionState[modl] = newOrderedTable[ModuleId, bool]()
   of mOutput:
     discard
 
@@ -138,7 +139,12 @@ proc processPulse(machine: var MachineState) =
     let emit = not machine.checkConjunction(pulse.dest)
     machine.pushPulse(emit, pulse.dest, machine.wires[pulse.dest])
   of mOutput:
-    discard
+    if pulse.dest == "rx" and pulse.p == Low:
+      machine.rx = true
+
+  let tgState = toSeq(machine.conjunctionState["tg"].values)
+  if tgState.foldl(a or b):
+    debugecho tgState
 
 proc processAllPulses(machine: var MachineState) =
   while machine.pulseQueue.len > 0:
@@ -155,3 +161,13 @@ let pt1 =
     m.pulseCount[High] * m.pulseCount[Low]
 
 echo pt1
+
+# Part 2
+var
+  mach = input
+  buttonCount = 0
+while not mach.rx:
+  mach.pushButton
+  inc buttonCount
+  mach.processAllPulses
+echo buttonCount
