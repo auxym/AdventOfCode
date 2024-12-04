@@ -1,9 +1,11 @@
+(defn readfile [path]
+  (with [f (file/open path)] (file/read f :all)))
+
 (defn readlines [path]
-  (with [f (file/open path)]
     (->>
-      (file/read f :all)
+      (readfile path)
       (string/trim)
-      (string/split "\n"))))
+      (string/split "\n")))
 
 (defn getints [s]
   (peg/match
