@@ -1,15 +1,16 @@
 (defn readfile [path]
   (with [f (file/open path)] (file/read f :all)))
 
+(defn splitlines [s] (string/split "\n" s))
+
 (defn readlines [path]
     (->>
       (readfile path)
       (string/trim)
-      (string/split "\n")))
+      (splitlines)))
 
 (defn getints [s]
   (peg/match
-   ~{:main (* (? :sep) :int (any (* :sep :int)) (? :sep))
-     :int (/ (<- (some :d)) ,scan-number)
-     :sep (some :D)}
+   ~{:main (* (any (+ :int 1)))
+     :int (/ (<- (some :d)) ,scan-number)}
     s))
