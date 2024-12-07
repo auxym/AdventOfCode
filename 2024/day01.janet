@@ -25,12 +25,11 @@
 # Part 2
 
 (defn p2 [input]
-  (def left (input 0))
-  (def right (input 1))
+  (def [left right] input)
   (def right-counts (frequencies right))
-  (var result 0)
-  (each x left
-    (+= result (* x (get right-counts x 0))))
-  result)
+  (sum (map
+    (fn [lv] (* lv (get right-counts lv 0)))
+    left))
+)
 
 (print (p2 input))
