@@ -5,10 +5,9 @@
 
 (defn p1 [s]
   (def mul-exprs (peg/match
-    ~{:main (* (any (+ :mulgrp 1)) -1)
-      :mulgrp (group :mul)
+    ~{:main (any (+ (group :mul) 1))
       :mul (* "mul(" :int "," :int ")")
-      :int (/ (<- (some :d)) ,scan-number)}
+      :int (number (some :d))}
     s))
 
   (sum (map (partial apply *) mul-exprs)))
@@ -19,11 +18,9 @@
 
 (defn p2 [s]
   (def instructions (peg/match
-    ~{:main (* (any (+ :instr 1)) -1)
-      :instr (+ :cond :mulgrp)
-      :mulgrp (group :mul)
+    ~{:main (any (+ (group :mul) :cond 1))
       :mul (* "mul(" :int "," :int ")")
-      :int (/ (<- (some :d)) ,scan-number)
+      :int (number (some :d))
       :cond (<- (+ "do()" "don't()"))}
     s))
 
@@ -34,7 +31,6 @@
       "do()"    (set state true)
       "don't()" (set state false)
       @[a b]    (if state (+= result (* a b)))))
-
   result)
 
 (pp (p2 input))
