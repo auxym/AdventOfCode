@@ -13,7 +13,12 @@ export tables
 export heapqueue
 
 type
-  Compass* = enum North, East, South, West
+  Compass* = enum
+    North
+    East
+    South
+    West
+
   Vector* = tuple[x, y: int]
   Vector3* = tuple[x, y, z: int]
   LineSegment* = tuple[a, b: Vector]
@@ -24,13 +29,15 @@ type
   SomeGrid* = ArrayGrid | SeqGrid
   TableGrid*[T] = Table[Vector, T]
 
-type PriorityQueueElem*[T] = object
-  prio: int
-  val: T
+type
+  PriorityQueueElem*[T] = object
+    prio: int
+    val: T
 
 type MinPriorityQueue*[T] = HeapQueue[PriorityQueueElem[T]]
 
-proc `<`*[T](a, b: PriorityQueueElem[T]): bool = a.prio < b.prio
+proc `<`*[T](a, b: PriorityQueueElem[T]): bool =
+  a.prio < b.prio
 
 proc push*[T](q: var MinPriorityQueue[T], x: T, priority: int) =
   q.push PriorityQueueElem[T](prio: priority, val: x)
@@ -69,15 +76,22 @@ func ccw2*(v: Vector): Vector =
   ## Rotate 90 deg clockwise. y is positive downwards
   (v.y, -v.x)
 
-func `+`*(a, b: Vector): Vector = (a.x + b.x, a.y + b.y)
-func `-`*(a, b: Vector): Vector = (a.x - b.x, a.y - b.y)
-func `-`*(a: Vector): Vector = (-a.x, -a.y)
-func `*`*(u: int, v: Vector): Vector = (u * v.x, u * v.y)
-func `/`*(a: Vector, b: int): Vector = (a.x div b, a.y div b)
+func `+`*(a, b: Vector): Vector =
+  (a.x + b.x, a.y + b.y)
+func `-`*(a, b: Vector): Vector =
+  (a.x - b.x, a.y - b.y)
+func `-`*(a: Vector): Vector =
+  (-a.x, -a.y)
+func `*`*(u: int, v: Vector): Vector =
+  (u * v.x, u * v.y)
+func `/`*(a: Vector, b: int): Vector =
+  (a.x div b, a.y div b)
 
-template `*`*(v: Vector, u: int): Vector = u * v
+template `*`*(v: Vector, u: int): Vector =
+  u * v
 
-func `+`*(a, b: Vector3): Vector3 = (a.x + b.x, a.y + b.y, a.z + b.z)
+func `+`*(a, b: Vector3): Vector3 =
+  (a.x + b.x, a.y + b.y, a.z + b.z)
 
 func inc*(a: var Vector, b: Vector) =
   a.x.inc(b.x)
@@ -93,7 +107,7 @@ func manhattan*(a, b: Vector): Natural =
   abs(b.x - a.x) + abs(b.y - a.y)
 
 func dot*(a, b: Vector): int =
-  a.x * b.x + a.y  * b.y
+  a.x * b.x + a.y * b.y
 
 func isHorizontal*(v: Vector): bool =
   v.y == 0
@@ -103,18 +117,26 @@ func isVertical*(v: Vector): bool =
 
 func toVector*(d: Compass): Vector =
   case d
-  of North: (0, 1)
-  of East: (1, 0)
-  of West: (-1, 0)
-  of South: (0, -1)
+  of North:
+    (0, 1)
+  of East:
+    (1, 0)
+  of West:
+    (-1, 0)
+  of South:
+    (0, -1)
 
 func toVector2*(d: Compass): Vector =
   ## Y axis positive downwards
   case d
-  of North: (0, -1)
-  of East: (1, 0)
-  of West: (-1, 0)
-  of South: (0, 1)
+  of North:
+    (0, -1)
+  of East:
+    (1, 0)
+  of West:
+    (-1, 0)
+  of South:
+    (0, 1)
 
 func getInts*(s: string): seq[int] =
   const expint = re2"-?\d+"
@@ -128,8 +150,7 @@ func getNaturalInts*(s: string): seq[Natural] =
 
 func digits*(i: int): seq[int] =
   result = @[]
-  var
-    j = i
+  var j = i
   while j > 0:
     result.add j mod 10
     j = j div 10
@@ -148,13 +169,16 @@ func cycleBackwards*[T: Ordinal](x: T): T =
     x.pred
 
 func toOrdinalSet*[T: Ordinal](s: openArray[T]): set[T] =
-  for e in s: result.incl e
+  for e in s:
+    result.incl e
 
 func toOrdinalSet*(s: string): set[char] =
-  for c in s: result.incl c
+  for c in s:
+    result.incl c
 
 func toOrdinalSet*[T: Ordinal](s: HSlice[T, T]): set[T] =
-  for e in s: result.incl e
+  for e in s:
+    result.incl e
 
 func newWeightedAdjList*[T](initialSize = 0): WeightedAdjList[T] =
   if initialSize <= 0:
@@ -169,7 +193,8 @@ func addEdge*[T](g: var WeightedAdjList[T], frm: T, to: T, weight: int = 1) =
     g[frm][to] = weight
 
 func addNode*[T](g: var WeightedAdjList[T], node: T) =
-  if node notin g: g[node] = newSeq[WeightedEdge[T]]().toTable
+  if node notin g:
+    g[node] = newSeq[WeightedEdge[T]]().toTable
 
 iterator traverseDfs*[T](g: WeightedAdjList[T], start: T): WeightedEdge[T] =
   var
@@ -179,7 +204,8 @@ iterator traverseDfs*[T](g: WeightedAdjList[T], start: T): WeightedEdge[T] =
   while stack.len > 0:
     cur = stack.pop
     yield cur
-    if cur.elem notin g: continue
+    if cur.elem notin g:
+      continue
     for (elem, wt) in g[cur.elem].pairs:
       stack.add (elem, wt)
 
@@ -192,7 +218,8 @@ func inverted*[T](graph: WeightedAdjList[T]): WeightedAdjList[T] =
 
 type DistPair[T] = tuple[v: T, r: int]
 
-func `<`*[T](a, b: DistPair[T]): bool = a.r < b.r
+func `<`*[T](a, b: DistPair[T]): bool =
+  a.r < b.r
 
 func dijkstraImpl[T](graph: WeightedAdjList[T], start: T, to: Option[T]): Table[T, int] =
   # Implementation of Dijkstra's algorithm based on:
@@ -223,7 +250,7 @@ func dijkstra*[T](graph: WeightedAdjList[T], start: T): Table[T, int] =
   dijkstraImpl(graph, start, T.none)
 
 iterator combinations*(n, k: int): seq[int] =
-  let hi = n-1
+  let hi = n - 1
   var
     i: int
     result = toSeq(0..<k)
@@ -234,11 +261,12 @@ iterator combinations*(n, k: int): seq[int] =
       inc result[i]
     else:
       dec i
-      while i >= 0 and result[i] >= (result[i+1] - 1):
+      while i >= 0 and result[i] >= (result[i + 1] - 1):
         dec i
-      if i < 0: break
+      if i < 0:
+        break
       inc result[i]
-    for j in (i+1..k-1):
+    for j in (i + 1..k - 1):
       result[j] = result[i] + (j - i)
     yield result
 
@@ -251,7 +279,8 @@ iterator product*(n, k: int): seq[int] =
   var
     cur: seq[int]
     j = 0
-  for i in 0..<k: cur.add 0
+  for i in 0..<k:
+    cur.add 0
   while true:
     yield cur
 
@@ -275,7 +304,8 @@ func toBitString*(a: SomeInteger, size = 64): string =
 
 iterator chain*[T](sequences: openArray[seq[T]]): T =
   for s in sequences:
-    for e in s: yield e
+    for e in s:
+      yield e
 
 proc dEchoHl*(s: string, hlPos: set[int16]) =
   var hlState = false
@@ -291,10 +321,12 @@ proc dEchoHl*(s: string, hlPos: set[int16]) =
   stdout.write "\n"
 
 func peek*[T](s: HashSet[T]): T =
-  for e in s: return e
+  for e in s:
+    return e
 
 func peek*[T: Ordinal](s: set[T]): T =
-  for e in s: return e
+  for e in s:
+    return e
 
 func `[]`*[a, b, T](g: ArrayGrid[a, b, T], v: Vector): T =
   g[v.y][v.x]
@@ -315,7 +347,9 @@ iterator tilemPairs*[a, b, T](g: var ArrayGrid[a, b, T]): (Vector, var T) =
     for (j, elem) in row.mpairs:
       yield ((j, i), elem)
 
-iterator adjacentVectors*[a, b, T](g: ArrayGrid[a, b, T], at: Vector, diag = true): Vector =
+iterator adjacentVectors*[a, b, T](
+    g: ArrayGrid[a, b, T], at: Vector, diag = true
+): Vector =
   if at.x > 0:
     yield (at.x - 1, at.y)
   if at.x < g[at.y].high:
@@ -335,7 +369,9 @@ iterator adjacentVectors*[a, b, T](g: ArrayGrid[a, b, T], at: Vector, diag = tru
     if at.x < g[at.y].high and at.y < g.high:
       yield (at.x + 1, at.y + 1)
 
-iterator adjacentPairs*[a, b, T](g: ArrayGrid[a, b, T], at: Vector, diag = true): (Vector, T) =
+iterator adjacentPairs*[a, b, T](
+    g: ArrayGrid[a, b, T], at: Vector, diag = true
+): (Vector, T) =
   for v in g.adjacentVectors(at, diag):
     yield (v, g[v])
 
@@ -361,7 +397,7 @@ iterator neighbors*[T](g: SeqGrid[T], v: Vector): Vector =
 
 iterator neighborPairs*[T](g: SeqGrid[T], v: Vector): (Vector, T) =
   for nbv in g.neighbors(v):
-    yield(nbv, g[nbv])
+    yield (nbv, g[nbv])
 
 iterator locs*[T](g: SeqGrid[T]): Vector =
   for i in 0..g.high:
@@ -383,7 +419,7 @@ iterator linePairs*[T](g: SeqGrid[T]): (Natural, seq[T]) =
     yield (i, ln)
     inc i
 
-func columns*[T; U, V: Ordinal](g: SeqGrid[T]; x: HSlice[U, V]): SeqGrid[T] =
+func columns*[T; U, V: Ordinal](g: SeqGrid[T], x: HSlice[U, V]): SeqGrid[T] =
   for row in g:
     result.add row[x]
 
@@ -394,21 +430,17 @@ func ncolumns*(g: SeqGrid): Natural =
   g[0].len
 
 proc isEdge*(grid: SomeGrid, loc: Vector): bool =
-  loc.y == grid.low or
-  loc.y == grid.high or
-  loc.x == grid[loc.y].low or
-  loc.x == grid[loc.y].high
+  loc.y == grid.low or loc.y == grid.high or loc.x == grid[loc.y].low or
+    loc.x == grid[loc.y].high
 
 proc isInside*(grid: SomeGrid, loc: Vector): bool =
-  loc.y >= grid.low and
-  loc.y <= grid.high and
-  loc.x >= grid[loc.y].low and
-  loc.x <= grid[loc.y].high
+  loc.y >= grid.low and loc.y <= grid.high and loc.x >= grid[loc.y].low and
+    loc.x <= grid[loc.y].high
 
 iterator groups*[T](s: openArray[T], n: Natural): seq[T] =
   for i in countup(0, s.high, n):
     let stop = min((i + n - 1), s.high)
-    yield s[i .. stop]
+    yield s[i..stop]
 
 func getBoundingBox*[T](h: TableGrid[T]): (Vector, Vector) =
   var
@@ -445,3 +477,7 @@ func isHorizontal*(line: LineSegment): bool =
 
 func isVertical*(line: LineSegment): bool =
   line.a.x == line.b.x
+
+iterator ritems*[T](s: openArray[T]): T =
+  for i in countdown(s.high, s.low):
+    yield s[i]
