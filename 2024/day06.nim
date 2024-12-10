@@ -1,4 +1,5 @@
 import std/strutils
+import std/sequtils
 import std/enumerate
 import std/sets
 import std/options
@@ -73,10 +74,60 @@ proc p1(input: Input): int =
     #showmap(input, guard)
     if guard.next.loc in input.obstructions:
       guard.direction = guard.direction.cw
-    guard = guard.next
+    else:
+      guard = guard.next
   #showmap(input, guard.next, some(visited))
   result = visited.card
 
 let input = readFile("./input/day06_input.txt").parseInput
 
 echo p1(input)
+
+# Part 2
+
+type
+  ExitCondition = enum
+    OutOfBounds
+    CycleDetected
+
+  SimResult = object
+    states: HashSet[GuardState]
+    exit: ExitCondition
+
+proc simulate(input: Input): SimResult =
+  var guard = input.guard
+
+  while true:
+    if not isInExtents(input, guard.loc):
+      result.exit = OutOfBounds
+      break
+    elif guard in result.states:
+      result.exit = CycleDetected
+      break
+
+    result.states.incl guard
+    if guard.next.loc in input.obstructions:
+      guard.direction = guard.direction.cw
+    else:
+      guard = guard.next
+
+proc p2(input: Input): int =
+  let
+    obsCandidates =
+      block:
+        let sim = simulate(input)
+        assert sim.exit == OutOfBounds
+        var locs: HashSet[Vector]
+        for st in sim.states:
+          locs.incl st.loc
+        locs
+
+  for newObs in obsCandidates:
+    if newObs == input.guard.loc:
+      continue
+    var modInput = input
+    modInput.obstructions.incl newObs
+    if simulate(modInput).exit == CycleDetected:
+      inc result
+
+echo p2(input)
