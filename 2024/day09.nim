@@ -12,14 +12,13 @@ func parseInput(s: string): DiskBlocks =
     isFile = true
     curId = FileId(0)
   for c in s.strip:
-    let
-      content =
-        if isFile:
-          some(curId)
-        else:
-          none(FileId)
+    let content =
+      if isFile:
+        some(curId)
+      else:
+        none(FileId)
 
-    for i in 0..<parseInt($c):
+    for i in 0 ..< parseInt($c):
       result.add content
 
     isFile = not isFile
@@ -27,7 +26,6 @@ func parseInput(s: string): DiskBlocks =
       inc curId
 
 let input = readFile("./input/day09_input.txt").parseInput
-#let input = parseInput "2333133121414131402"
 
 func checksum(blocks: DiskBlocks): int =
   for (i, blk) in enumerate(blocks):
@@ -47,7 +45,7 @@ proc p1(input: DiskBlocks): int =
   var blocks = input
   var nextUsed = blocks.high
 
-  for i in 0..blocks.high:
+  for i in 0 .. blocks.high:
     if isSome(blocks[i]):
       continue
 
@@ -67,3 +65,55 @@ proc p1(input: DiskBlocks): int =
   result = checksum blocks
 
 echo p1(input)
+
+# Part 2
+
+type BlockSequence = Slice[Natural]
+
+func moveFile(blocks: var DiskBlocks, src, dst: BlockSequence) =
+  for k in 0 ..< src.len:
+    assert blocks[dst.a + k].isNone
+    assert blocks[src.a + k].isSome
+    blocks[dst.a + k] = blocks[src.a + k]
+    blocks[src.a + k] = none(FileId)
+    assert blocks[dst.a + k].isSome
+    assert blocks[src.a + k].isNone
+
+func tryMoveFile(blocks: var DiskBlocks, fileLoc: BlockSequence): bool =
+  var i = 0
+  while i <= fileLoc.a:
+    if blocks[i].isNone:
+      var j = i
+      while (j + 1) <= blocks.high and blocks[j + 1].isNone:
+        inc j
+      let hole = i.Natural .. j.Natural
+
+      if hole.len >= fileLoc.len:
+        blocks.moveFile(fileLoc, hole)
+        return true
+      i = hole.b + 1
+    else:
+      inc i
+
+proc p2(input: DiskBlocks): int =
+  var
+    blocks = input
+    i = blocks.high
+
+  while i >= blocks.low:
+    if blocks[i].isSome:
+      let fileLoc = block:
+        # Find start of file
+        var j = i
+        while (j - 1) >= blocks.low and blocks[j - 1] == blocks[i]:
+          dec j
+        j.Natural .. i.Natural
+
+      discard blocks.tryMoveFile fileLoc
+      i = fileLoc.a - 1
+    else:
+      dec i
+
+  result = checksum blocks
+
+echo p2(input)
