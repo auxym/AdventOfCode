@@ -8,6 +8,7 @@ import std/options
 import std/strformat
 import std/terminal
 import std/sets
+import std/math
 
 export tables
 export heapqueue
@@ -155,6 +156,13 @@ func digits*(i: int): seq[int] =
     result.add j mod 10
     j = j div 10
   result = result.reversed
+
+func digitsToNumber*(d: seq[int]): int =
+  var exp = d.len - 1
+  for e in d:
+    assert e >= 0 and e < 10
+    result.inc e * (10 ^ exp)
+    dec exp
 
 func cycle*[T: Ordinal](x: T): T =
   if x == T.high:
