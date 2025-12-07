@@ -19,3 +19,13 @@ func LoadInput(day int) string {
 func Lines(s string) []string {
 	return strings.Split(strings.TrimSpace(s), "\n")
 }
+
+func ShowAnswer[T comparable](part int, x, expected T, doCheck bool) {
+	if doCheck && (x != expected) {
+		fmt.Printf("Part %d: FAIL Expected %v, got %v\n", part, expected, x)
+	} else if doCheck {
+		fmt.Printf("Part %d: PASS %v\n", part, x)
+	} else {
+		fmt.Printf("Part %d: %v\n", part, x)
+	}
+}

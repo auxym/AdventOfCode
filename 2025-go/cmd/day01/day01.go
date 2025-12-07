@@ -45,6 +45,6 @@ func part2() int {
 }
 
 func main() {
-	fmt.Println(part1())
-	fmt.Println(part2())
+	utils.ShowAnswer(1, part1(), 1195, true)
+	utils.ShowAnswer(2, part2(), 0, false)
 }
