@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/auxym/AdventOfCode/2025-go/utils"
-	"fmt"
 )
 
 const day = 1
@@ -18,6 +17,6 @@ func part2() int {
 }
 
 func main() {
-	fmt.Println(part1())
-	fmt.Println(part2())
+	utils.ShowAnswer(1, part1(), 0, false)
+	utils.ShowAnswer(2, part2(), 0, false)
 }
