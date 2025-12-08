@@ -51,12 +51,38 @@ func part1() int64 {
 	return result
 }
 
-func part2() int {
-	utils.LoadInput(day)
-	return 0
+func compareSubstrings(s string, subslen int) bool {
+	if len(s) % subslen != 0 {
+		return false
+	}
+
+	for i := subslen; (i + subslen <= len(s)); i += subslen {
+		if s[0:subslen] != s[i:(i + subslen)] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func part2() int64 {
+	var result int64
+	input := parseInput(utils.LoadInput(day))
+	for _, rng := range input {
+		for x := rng.a; x <= rng.b; x++ {
+			s := fmt.Sprint(x)
+			for replen := 1; replen <= (len(s) / 2); replen++ {
+				if compareSubstrings(s, replen) {
+					result += x
+					break
+				}
+			}
+		}
+	}
+	return result
 }
 
 func main() {
-	utils.ShowAnswer(1, part1(), 0, false)
-	utils.ShowAnswer(2, part2(), 0, false)
+	utils.ShowAnswer(1, part1(), 18595663903, true)
+	utils.ShowAnswer(2, part2(), 19058204438, true)
 }
