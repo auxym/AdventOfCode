@@ -31,8 +31,22 @@ func ShowAnswer[T comparable](part int, x, expected T, doCheck bool) {
 }
 
 func Abs[T ~int | ~int8 | ~int16 | ~int32 | ~int64](x T) T {
-    if x < 0 {
-        return -x
-    }
-    return x
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
+func WithoutLast[T any](s []T) []T {
+	if len(s) == 0 {
+		return s
+	}
+	return s[:len(s)-1]
+}
+
+func ParseCharInt(b rune) int {
+	if b < '0' || b > '9' {
+		panic("Rune is not within 0-9")
+	}
+	return int(b - '0')
 }
