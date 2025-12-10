@@ -5,10 +5,20 @@ import (
 	"os"
 	"path"
 	"strings"
+	"golang.org/x/exp/constraints"
 )
 
 func LoadInput(day int) string {
 	filepath := path.Join("input", fmt.Sprintf("day%02d_input.txt", day))
+	contents, err := os.ReadFile(filepath)
+	if err != nil {
+		panic(err)
+	}
+	return string(contents)
+}
+
+func LoadExampleInput(day int) string {
+	filepath := path.Join("input", fmt.Sprintf("day%02d_example.txt", day))
 	contents, err := os.ReadFile(filepath)
 	if err != nil {
 		panic(err)
@@ -49,4 +59,15 @@ func ParseCharInt(b rune) int {
 		panic("Rune is not within 0-9")
 	}
 	return int(b - '0')
+}
+
+func PowInt[T constraints.Integer](m, n T) T {
+	if n < 0 {
+		panic("Negative exponent not supported")
+	}
+	result := T(1)
+	for i := T(1); i <= n; i++ {
+		result = result * m
+	}	
+	return result
 }
