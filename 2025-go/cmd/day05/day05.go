@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -47,7 +48,7 @@ func parseInput(s string) Database {
 	return db
 }
 
-func (rng Range) isIn(x int) bool {
+func (rng Range) Contains(x int) bool {
 	return x >= rng.A && x <= rng.B
 }
 
@@ -56,7 +57,7 @@ func part1() int {
 	db := parseInput(utils.LoadInput(day))
 	for _, ing := range db.Available {
 		for _, rng := range db.FreshRanges {
-			if rng.isIn(ing) {
+			if rng.Contains(ing) {
 				numFresh++
 				break
 			}
@@ -65,9 +66,82 @@ func part1() int {
 	return numFresh
 }
 
-func part2() int {
-	utils.LoadInput(day)
-	return 0
+func (rng Range) Length() int {
+	return rng.B - rng.A + 1
+}
+
+func (rng Range) HasOverlap(other Range) bool {
+	return rng.Contains(other.A) || rng.Contains(other.B) || other.Contains(rng.A) || other.Contains(rng.B)
+}
+
+func (x Range) Union(y Range) Range {
+	if !x.HasOverlap(y) {
+		panic("No overlap cannot union")
+	}
+	return Range{A: min(x.A, y.A), B: max(x.B, y.B)}
+}
+
+// Disjoint range composed of multiple subranges that are guaranteed wi
+// be disjoint with respect to each other (no overlap).
+type DisjointRange []Range
+
+// Attempt to merge subrange at index "index" of DisjointRange "dr" into
+// any of the other subranges, if it overlaps. If merge succeeds, repeat
+// the process with the new, merged subrange, until there are no possible
+// merge (no subrange overlap).
+func (dr DisjointRange) tryMerge(index int) DisjointRange {
+	for {
+		target := dr[index]
+		canMerge := -1
+		for i, rng := range dr {
+			if i == index {
+				continue
+			}
+			if rng.HasOverlap(target) {
+				canMerge = i
+				break
+			}
+		}
+
+		if canMerge >= 0 {
+			keepIndex := min(index, canMerge)
+			delIndex := max(index, canMerge)
+			dr[keepIndex] = target.Union(dr[canMerge])
+			dr = slices.Delete(dr, delIndex, delIndex+1)
+			index = keepIndex
+			// loop again and attempt to merge this new item
+		} else {
+			// Cannot merge
+			return dr
+		}
+	}
+}
+
+// Add a new subrange into a DisjoinRange.
+func (dr DisjointRange) Union(other Range) DisjointRange {
+	for i, rng := range dr {
+		if rng.HasOverlap(other) {
+			dr[i] = rng.Union(other)
+			return dr.tryMerge(i)
+		}
+	}
+	return append(dr, other)
+}
+
+func part2() int64 {
+	db := parseInput(utils.LoadInput(day))
+
+	var dr DisjointRange = make([]Range, 0, 1024)
+	for _, rng := range db.FreshRanges {
+		dr = dr.Union(rng)
+	}
+
+	var count int64 = 0
+	for _, rng := range dr {
+		count += int64(rng.Length())
+	}
+
+	return count
 }
 
 func main() {
