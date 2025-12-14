@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"regexp"
+	"strconv"
 	"strings"
+
 	"golang.org/x/exp/constraints"
 )
 
@@ -40,6 +43,19 @@ func ShowAnswer[T comparable](part int, x, expected T, doCheck bool) {
 	}
 }
 
+func GetInts(s string) []int64 {
+	var result []int64
+	re := regexp.MustCompile(`\d+`)
+	for _, part := range re.FindAllString(s, -1) {
+		val, err := strconv.ParseInt(part, 10, 64)
+		if err != nil {
+			panic(err)
+		}
+		result = append(result, val)
+	}
+	return result
+}
+
 func Abs[T ~int | ~int8 | ~int16 | ~int32 | ~int64](x T) T {
 	if x < 0 {
 		return -x
@@ -68,6 +84,6 @@ func PowInt[T constraints.Integer](m, n T) T {
 	result := T(1)
 	for i := T(1); i <= n; i++ {
 		result = result * m
-	}	
+	}
 	return result
 }
