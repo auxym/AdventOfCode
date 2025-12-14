@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/auxym/AdventOfCode/2025-go/utils"
@@ -30,7 +31,7 @@ func parseInput(s string) Homework {
 		}
 	}
 
-	for i, op := range strings.Fields(lines[len(lines) - 1]) {
+	for i, op := range strings.Fields(lines[len(lines)-1]) {
 		if len(op) != 1 || !strings.ContainsAny(op, "+*") {
 			panic(fmt.Sprintf("Unexpected operator '%s'", op))
 		}
@@ -59,12 +60,69 @@ func part1() int64 {
 	return result
 }
 
-func part2() int {
-	utils.LoadInput(day)
-	return 0
+// ---- Part 2 -------------------------------
+
+func containsOnly(s []byte, b byte) bool {
+    if len(s) == 0 {
+        return false
+    }
+    for _, v := range s {
+        if v != b {
+            return false
+        }
+    }
+    return true
+}
+
+func parseInput2(s string) Homework {
+	var hw []Problem
+	lines := strings.Split(strings.TrimRight(s, "\n"), "\n")
+	numLines := utils.WithoutLast(lines)
+
+	var pb Problem
+	operandIndex := 0
+	for colIndex := range numLines[0] {
+		var opChars []byte
+		for lineIndex := range numLines {
+			b := numLines[lineIndex][colIndex]
+			opChars = append(opChars, b)
+		}
+
+		if containsOnly(opChars, ' ') {
+			hw = append(hw, pb)
+			pb.Operands = nil
+			operandIndex = 0
+		} else {
+			val, err := strconv.ParseInt(strings.TrimSpace(string(opChars)), 10, 64)
+			if err != nil {
+				panic(err)
+			}
+			pb.Operands = append(pb.Operands, val)
+			operandIndex ++
+		}
+	}
+	hw = append(hw, pb)
+
+	for i, op := range strings.Fields(lines[len(lines)-1]) {
+		if len(op) != 1 || !strings.ContainsAny(op, "+*") {
+			panic(fmt.Sprintf("Unexpected operator '%s'", op))
+		}
+		hw[i].Operator = op[0]
+	}
+
+	return hw
+}
+
+func part2() int64 {
+	hw := parseInput2(utils.LoadInput(day))
+	result := int64(0)
+	for _, pb := range hw {
+		result += compute(pb)
+	}
+	return result
 }
 
 func main() {
 	utils.ShowAnswer(1, part1(), 4722948564882, true)
-	utils.ShowAnswer(2, part2(), 0, false)
+	utils.ShowAnswer(2, part2(), 9581313737063, true)
 }
