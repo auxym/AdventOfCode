@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
 	"strconv"
@@ -144,7 +145,29 @@ func part2() int64 {
 	return count
 }
 
+// Because I didn't think to sort the ranges before I saw the idea on reddit :(
+func part2_sort() int {
+	db := parseInput(utils.LoadInput(day))
+	slices.SortFunc(db.FreshRanges, func(x, y Range) int {
+		return cmp.Compare(x.A, y.A)
+	})
+
+	count := 0
+	cur := db.FreshRanges[0]
+	for _, rng := range db.FreshRanges[1:] {
+		if rng.A <= cur.B {
+			cur.B = max(cur.B, rng.B)
+		} else {
+			count += cur.Length()
+			cur = rng
+		}
+	}
+	count += cur.Length()
+	return count
+}
+
 func main() {
 	utils.ShowAnswer(1, part1(), 733, true)
-	utils.ShowAnswer(2, part2(), 0, false)
+	utils.ShowAnswer(2, part2(), 345821388687084, true)
+	utils.ShowAnswer(2, part2_sort(), 345821388687084, true)
 }
