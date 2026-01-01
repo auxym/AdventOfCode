@@ -12,6 +12,38 @@ type Vector struct {
 	X, Y int
 }
 
+func (v Vector) East() Vector {
+	return Vector{X: v.X + 1, Y: v.Y}
+}
+
+func (v Vector) West() Vector {
+	return Vector{X: v.X - 1, Y: v.Y}
+}
+
+func (v Vector) North() Vector {
+	return Vector{X: v.X, Y: v.Y - 1}
+}
+
+func (v Vector) South() Vector {
+	return Vector{X: v.X, Y: v.Y + 1}
+}
+
+func (v Vector) NorthEast() Vector {
+	return Vector{X: v.X + 1, Y: v.Y - 1}
+}
+
+func (v Vector) NorthWest() Vector {
+	return Vector{X: v.X - 1, Y: v.Y - 1}
+}
+
+func (v Vector) SouthEast() Vector {
+	return Vector{X: v.X + 1, Y: v.Y + 1}
+}
+
+func (v Vector) SouthWest() Vector {
+	return Vector{X: v.X - 1, Y: v.Y + 1}
+}
+
 func InitRuneGrid(rows, cols int) RuneGrid {
 	items := make([][]rune, rows)
 	for i := range items {

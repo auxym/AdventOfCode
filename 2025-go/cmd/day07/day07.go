@@ -56,12 +56,44 @@ func part1() int {
 	return splitCount
 }
 
+// Dynamic programming implementation with an inner recursive function and a
+// map used as a cache.
+func countTimelines(particle utils.Vector, tm TachyonManifold) int {
+	var countTimelinesRec func(utils.Vector) int
+	cache := make(map[utils.Vector]int, 1024*64)
+
+	countTimelinesRec = func(particle utils.Vector) int {
+		if particle.Y >= tm.NumRows {
+			return 1
+		}
+
+		count, inCache := cache[particle]
+		if inCache {
+			return count
+		}
+
+		_, isSplitter := tm.Splitters[particle]
+		var result int
+		if isSplitter {
+			result = countTimelinesRec(particle.SouthEast()) + countTimelinesRec(particle.SouthWest())
+		} else {
+			result = countTimelinesRec(particle.South())
+		}
+
+		cache[particle] = result
+		return result
+	}
+
+	return countTimelinesRec(particle)
+}
+
 func part2() int {
-	utils.LoadInput(day)
-	return 0
+	tm := parseInput(utils.LoadInput(day))
+	particle := utils.Vector{Y: 0, X: tm.BeamStartX}
+	return countTimelines(particle, tm)
 }
 
 func main() {
-	utils.ShowAnswer(1, part1(), 0, false)
-	utils.ShowAnswer(2, part2(), 0, false)
+	utils.ShowAnswer(1, part1(), 1541, true)
+	utils.ShowAnswer(2, part2(), 80158285728929, true)
 }
